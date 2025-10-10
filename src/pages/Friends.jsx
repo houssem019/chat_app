@@ -1,0 +1,107 @@
+import React, { useState, useEffect } from 'react'
+import { supabase } from '../supabaseClient'
+import { useNavigate } from 'react-router-dom'
+
+export default function Friends() {
+  const [currentUser, setCurrentUser] = useState(null)
+  const [friends, setFriends] = useState([])
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return navigate('/auth')
+      setCurrentUser(user)
+      fetchFriends(user.id)
+    })
+  }, [])
+
+  // Fetch friends function with explicit foreign key join
+  async function fetchFriends(userId) {
+    const { data, error } = await supabase
+      .from('friendships')
+      .select(`
+        requester_id,
+        friend_id,
+        status,
+        requester:profiles!friendships_requester_id_fkey(*),
+        friend:profiles!friendships_friend_id_fkey(*)
+      `)
+      .or(`and(requester_id.eq.${userId},status.eq.accepted),and(friend_id.eq.${userId},status.eq.accepted)`)
+
+    if (error) {
+      console.error('Error fetching friends:', error)
+    } else {
+      const friendsList = data.map(f => (f.requester_id === userId ? f.friend : f.requester))
+      setFriends(friendsList)
+    }
+  }
+
+  // Realtime subscription for friendship changes
+  useEffect(() => {
+    if (!currentUser) return
+
+    const channel = supabase
+      .channel('friendship-updates')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'friendships' },
+        payload => {
+          // Only refresh if currentUser is involved
+          if (
+            payload.new?.requester_id === currentUser.id ||
+            payload.new?.friend_id === currentUser.id ||
+            payload.old?.requester_id === currentUser.id ||
+            payload.old?.friend_id === currentUser.id
+          ) {
+            fetchFriends(currentUser.id)
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [currentUser])
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    navigate('/auth')
+  }
+
+  return (
+    <div className="container">
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+        <h2>My Friends</h2>
+        <div>
+          <button onClick={() => navigate('/')}>All Users</button>{' '}
+          <button onClick={() => navigate('/notifications')}>Notifications</button>{' '}
+          <button onClick={() => navigate('/profile')}>Profile</button>{' '}
+          <button onClick={() => navigate('/chats')}>My Chats</button>{' '}
+          <button onClick={handleLogout}>Logout</button>
+        </div>
+      </div>
+
+      {friends.length === 0 && <p>No friends yet.</p>}
+      <ul>
+        {friends.map(user => (
+          <li
+            key={user.id}
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate(`/chat/${user.username}`)}
+          >
+            {user.avatar_url && (
+              <img
+                src={user.avatar_url}
+                alt="avatar"
+                width={40}
+                style={{ borderRadius: '50%', marginRight: '10px' }}
+              />
+            )}
+            {user.username || user.full_name}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
