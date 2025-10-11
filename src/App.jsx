@@ -7,6 +7,7 @@ import ChatsList from './pages/ChatsList'
 import Chat from './pages/Chat'
 import Notifications from './pages/Notifications'
 import Friends from './pages/Friends'
+import UserProfile from './pages/UserProfile'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/u/:username" element={<UserProfile />} />
         <Route path="/" element={<UsersList />} />
         <Route path="/chats" element={<ChatsList />} />
         <Route path="/chat/:username" element={<Chat />} />
