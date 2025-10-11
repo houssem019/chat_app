@@ -1,16 +1,54 @@
-# React + Vite
+# ChatTwins – Profile UI update and Dark Theme
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This branch adds two changes:
 
-Currently, two official plugins are available:
+1. User profile: when viewing someone who is already your friend, the "Friends" label is no longer shown. You will still see the Remove and Chat actions.
+2. System-aware dark theme: the site now follows the OS theme using CSS variables and the `prefers-color-scheme` media query. All common components and pages have been updated to use variables.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Profile UI change
 
-## React Compiler
+File: `src/pages/UserProfile.jsx`
+- When `relationStatus === 'friends'`, the Friends chip was removed; only the Remove button remains alongside Chat.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Impact:
+- Cleaner UI on friend profiles; behavior for non-friends stays the same (Add Friend, Pending states, etc.).
 
-## Expanding the ESLint configuration
+## Dark theme
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Implemented via CSS variables in `src/index.css`:
+- Light defaults are defined under `:root`.
+- Dark values are defined under `@media (prefers-color-scheme: dark) { :root { ... } }`.
+
+Key variables (non-exhaustive):
+- `--bg-app`, `--bg-page`, `--text-primary`, `--text-secondary`, `--text-muted`
+- `--card-bg`, `--card-border`, `--divider`
+- `--button-bg`, `--button-text`, `--button-border`, `--button-hover`
+- `--brand-primary`, `--brand-primary-hover`, `--brand-primary-disabled`
+- `--danger-bg`, `--danger-text`, `--danger-border`
+- `--chip-bg`, `--chip-border`, `--chip-text`
+- `--placeholder-avatar-bg`, `--placeholder-avatar-text`
+- `--input-bg`, `--input-border`, `--muted-surface-bg`, `--subtle-surface-bg`
+
+### Updated components/pages to use variables
+- `src/components/Header.jsx` (badge color, header background/border)
+- `src/components/Footer.jsx`
+- `src/pages/Auth.jsx`
+- `src/pages/Chat.jsx`
+- `src/pages/ChatsList.jsx`
+- `src/pages/Friends.jsx`
+- `src/pages/Notifications.jsx`
+- `src/pages/Profile.jsx`
+- `src/pages/UserProfile.jsx`
+
+### How it works
+- If the system theme is dark, the site switches to dark automatically.
+- No manual toggle is necessary; it respects OS-level preferences.
+
+### Notes for future development
+- When adding new UI, prefer CSS variables over hardcoded colors.
+- For chips or semantic states, use the provided variables; extend the set in `index.css` if needed.
+
+## Testing
+- On macOS: System Settings → Appearance → Dark; reload the app.
+- On Windows/Linux: switch your DE to dark mode or use DevTools → Rendering → Emulate CSS prefers-color-scheme.
+- Verify page backgrounds, cards, text colors, buttons, badges, and chat bubbles adapt correctly.
