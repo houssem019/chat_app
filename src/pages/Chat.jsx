@@ -97,6 +97,11 @@ export default function Chat() {
     } catch (e) {
       // ignore storage errors
     }
+    try {
+      window.dispatchEvent(new Event('chats:lastOpened'))
+    } catch (_) {
+      // ignore
+    }
   }
 
   useEffect(() => {
@@ -109,8 +114,15 @@ export default function Chat() {
   useEffect(() => {
     if (!otherProfile?.id) return
     const onFocus = () => markChatOpened(otherProfile.id)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') markChatOpened(otherProfile.id)
+    }
     window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [otherProfile?.id])
 
   async function fetchMessages(userId, otherId) {

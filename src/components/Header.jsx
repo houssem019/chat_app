@@ -94,6 +94,43 @@ export default function Header() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // React to focus/localStorage/custom events to keep badges in real time
+  useEffect(() => {
+    if (!authUser?.id) return
+    const myId = authUser.id
+
+    const handleStorage = (event) => {
+      try {
+        const key = event?.key || ''
+        if (key.startsWith('lastOpenedChatById:')) {
+          computeUnreadChats(myId)
+        }
+        if (key === 'lastOpenedNotifications') {
+          fetchPendingRequests(myId)
+        }
+      } catch (_) {
+        // ignore
+      }
+    }
+
+    const handleChatsOpened = () => computeUnreadChats(myId)
+    const handleNotificationsOpened = () => fetchPendingRequests(myId)
+    const handleFocus = () => refreshCounts(myId)
+
+    window.addEventListener('storage', handleStorage)
+    window.addEventListener('chats:lastOpened', handleChatsOpened)
+    window.addEventListener('notifications:lastOpened', handleNotificationsOpened)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('chats:lastOpened', handleChatsOpened)
+      window.removeEventListener('notifications:lastOpened', handleNotificationsOpened)
+      window.removeEventListener('focus', handleFocus)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser?.id])
+
   useEffect(() => {
     if (authUser) {
       // Recompute counts on route changes in case user opened chats/notifications
@@ -109,7 +146,7 @@ export default function Header() {
   async function fetchPendingRequests(myId) {
     const { data, error } = await supabase
       .from('friendships')
-      .select('id')
+      .select('id, created_at')
       .eq('friend_id', myId)
       .eq('status', 'pending')
     if (error) {
@@ -117,7 +154,19 @@ export default function Header() {
       setPendingRequests(0)
       return
     }
-    setPendingRequests(Array.isArray(data) ? data.length : 0)
+    const list = Array.isArray(data) ? data : []
+    let unseen = list.length
+    try {
+      const lastIso = localStorage.getItem('lastOpenedNotifications')
+      const lastOpened = lastIso ? Date.parse(lastIso) : 0
+      if (lastOpened > 0) {
+        const newer = list.filter(it => it?.created_at && Date.parse(it.created_at) > lastOpened)
+        unseen = newer.length
+      }
+    } catch (_) {
+      // ignore storage errors
+    }
+    setPendingRequests(unseen)
   }
 
   async function computeUnreadChats(myId) {

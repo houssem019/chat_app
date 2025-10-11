@@ -17,6 +17,27 @@ export default function Notifications() {
     })
   }, [])
 
+  // Mark notifications as opened when the page mounts/focuses to keep header badge accurate
+  useEffect(() => {
+    if (!currentUser?.id) return
+    const markNotificationsOpened = () => {
+      try {
+        localStorage.setItem('lastOpenedNotifications', new Date().toISOString())
+      } catch (_) {
+        // ignore storage errors
+      }
+      try {
+        window.dispatchEvent(new Event('notifications:lastOpened'))
+      } catch (_) {
+        // ignore
+      }
+    }
+    markNotificationsOpened()
+    const onFocus = () => markNotificationsOpened()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [currentUser?.id])
+
   async function fetchRequests(userId) {
     const { data, error } = await supabase
       .from('friendships')
