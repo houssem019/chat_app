@@ -151,7 +151,9 @@ export default function UsersList() {
                     </div>
                   )}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: isSelf ? 700 : 600 }}>{u.username || u.full_name || 'No Name'} {isSelf && <span style={{ marginLeft: 6, fontStyle: 'italic', fontWeight: 400 }}>(You)</span>}</div>
+                    <div style={{ fontWeight: isSelf ? 700 : 600 }} onClick={(e) => { e.stopPropagation(); u.username && navigate(`/u/${u.username}`) }} style={{ cursor: u.username ? 'pointer' : 'default', fontWeight: isSelf ? 700 : 600 }}>
+                      {u.username || u.full_name || 'No Name'} {isSelf && <span style={{ marginLeft: 6, fontStyle: 'italic', fontWeight: 400 }}>(You)</span>}
+                    </div>
                     <div style={{ color: '#6b7280', fontSize: 12 }}>
                       {u.country || 'Unknown country'} {u.age ? `· ${u.age}` : ''} {u.gender ? `· ${u.gender}` : ''}
                     </div>

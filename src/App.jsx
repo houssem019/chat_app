@@ -8,10 +8,13 @@ import Chat from './pages/Chat'
 import Notifications from './pages/Notifications'
 import Friends from './pages/Friends'
 import UserProfile from './pages/UserProfile'
+import Header from './components/Header'
+import Footer from './components/Footer'
 
 export default function App() {
   return (
     <Router>
+      <Header />
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/profile" element={<Profile />} />
@@ -23,6 +26,7 @@ export default function App() {
         <Route path="/friends" element={<Friends />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      <Footer />
     </Router>
   )
 }

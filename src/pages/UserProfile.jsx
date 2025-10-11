@@ -124,12 +124,6 @@ export default function UserProfile() {
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 16 }}>
         <div className="page-header">
           <h2 style={{ margin: 0 }}>{headerName}</h2>
-          <div className="header-actions">
-            <button onClick={() => navigate('/')}>All Users</button>
-            <button onClick={() => navigate('/friends')}>Friends</button>
-            <button onClick={() => navigate('/notifications')}>Notifications</button>
-            <button onClick={() => navigate('/chats')}>My Chats</button>
-          </div>
         </div>
 
         {!userProfile ? (

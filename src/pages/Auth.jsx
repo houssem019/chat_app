@@ -33,8 +33,12 @@ export default function Auth() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f7f7fb', display: 'grid', placeItems: 'center', padding: 16 }}>
-      <div style={{ width: '100%', maxWidth: 380, background: '#ffffff', border: '1px solid #eee', borderRadius: 12, padding: 20, boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
-        <h2 style={{ margin: '0 0 12px 0', textAlign: 'center' }}>{mode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
+      <div style={{ width: '100%', maxWidth: 420, background: '#ffffff', border: '1px solid #eee', borderRadius: 12, padding: 24, boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
+          <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: 0.3, color: '#111827' }}>Chat</span>
+          <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: 0.3, color: '#4f46e5' }}>Twins</span>
+        </div>
+        <h2 style={{ margin: '0 0 12px 0', textAlign: 'center' }}>{mode === 'login' ? 'Welcome back to ChatTwins' : 'Join ChatTwins'}</h2>
         <div style={{ color: '#6b7280', textAlign: 'center', marginBottom: 16 }}>
           {mode === 'login' ? 'Log in to continue' : 'Sign up to get started'}
         </div>
@@ -69,6 +73,9 @@ export default function Auth() {
               {mode === 'login' ? 'Signup' : 'Login'}
             </span>
           </div>
+        </div>
+        <div style={{ marginTop: 16, textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>
+          By continuing you agree to ChatTwins.com terms.
         </div>
       </div>
     </div>
