@@ -27,10 +27,14 @@ export default function UsersList() {
   }, [])
 
   async function fetchUsers() {
+    // Fetch all users; we will filter out the current user after we know them
     const { data, error } = await supabase.from('profiles').select('*')
     if (error) return console.error('fetchUsers error', error)
-    setUsers(data || [])
-    setFilteredUsers(data || [])
+    const list = data || []
+    const myId = currentUser?.id
+    const withoutMe = myId ? list.filter(u => u.id !== myId) : list
+    setUsers(withoutMe)
+    setFilteredUsers(withoutMe)
   }
 
   async function fetchFriendships(userId) {
@@ -49,6 +53,7 @@ export default function UsersList() {
     if (filterCountry) temp = temp.filter(u => u.country === filterCountry)
     if (filterAge) temp = temp.filter(u => Number(u.age) === Number(filterAge))
     if (filterGender) temp = temp.filter(u => (u.gender || '').toLowerCase() === filterGender.toLowerCase())
+    if (currentUser?.id) temp = temp.filter(u => u.id !== currentUser.id)
     setFilteredUsers(temp)
   }
 
@@ -131,6 +136,7 @@ export default function UsersList() {
             {filteredUsers.map(u => {
               const rel = relationWith(u.id)
               const isSelf = currentUser?.id === u.id
+              if (isSelf) return null
               return (
                 <li key={u.id} style={{ border: '1px solid #eee', background: '#fff', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
                   {u.avatar_url ? (
@@ -141,8 +147,8 @@ export default function UsersList() {
                     </div>
                   )}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: isSelf ? 700 : 600 }} onClick={(e) => { e.stopPropagation(); u.username && navigate(`/u/${u.username}`) }} style={{ cursor: u.username ? 'pointer' : 'default', fontWeight: isSelf ? 700 : 600 }}>
-                      {u.username || u.full_name || 'No Name'} {isSelf && <span style={{ marginLeft: 6, fontStyle: 'italic', fontWeight: 400 }}>(You)</span>}
+                    <div onClick={(e) => { e.stopPropagation(); u.username && navigate(`/u/${u.username}`) }} style={{ cursor: u.username ? 'pointer' : 'default', fontWeight: 600 }}>
+                      {u.username || u.full_name || 'No Name'}
                     </div>
                     <div style={{ color: '#6b7280', fontSize: 12 }}>
                       {u.country || 'Unknown country'} {u.age ? `· ${u.age}` : ''} {u.gender ? `· ${u.gender}` : ''}

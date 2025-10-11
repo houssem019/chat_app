@@ -10,6 +10,7 @@ export default function UserProfile() {
   const [userProfile, setUserProfile] = useState(null)
   const [friendship, setFriendship] = useState(null)
   const [working, setWorking] = useState(false)
+  const [gallery, setGallery] = useState([])
 
   const headerName = useMemo(
     () => userProfile?.username || userProfile?.full_name || 'User',
@@ -47,6 +48,7 @@ export default function UserProfile() {
       if (!isMounted) return
       setUserProfile(target)
       await fetchFriendship(authUser.id, target.id)
+      await loadGallery(target.id)
     })()
 
     return () => {
@@ -70,6 +72,27 @@ export default function UserProfile() {
     setFriendship(data || null)
   }
 
+  async function loadGallery(userId) {
+    try {
+      const { data: files, error } = await supabase.storage
+        .from('chat-uploads')
+        .list(`profile-photos/${userId}`, { limit: 50, offset: 0, sortBy: { column: 'name', order: 'desc' } })
+      if (error) throw error
+      const items = Array.isArray(files) ? files : []
+      const urls = await Promise.all(
+        items.map(async (f) => {
+          const path = `profile-photos/${userId}/${f.name}`
+          const { data } = await supabase.storage.from('chat-uploads').getPublicUrl(path)
+          return { name: f.name, path, url: data?.publicUrl || null }
+        })
+      )
+      setGallery(urls.filter(u => u.url))
+    } catch (e) {
+      console.error('loadGallery error', e)
+      setGallery([])
+    }
+  }
+
   const relationStatus = useMemo(() => {
     if (!friendship || !currentUser || !userProfile) return 'none'
     if (friendship.status === 'accepted') return 'friends'
@@ -88,6 +111,23 @@ export default function UserProfile() {
     if (error) console.error('addFriend error', error)
     await fetchFriendship(currentUser.id, userProfile.id)
     setWorking(false)
+  }
+
+  async function removeFriend() {
+    if (!currentUser || !userProfile) return
+    setWorking(true)
+    try {
+      const { error } = await supabase
+        .from('friendships')
+        .delete()
+        .or(
+          `and(requester_id.eq.${currentUser.id},friend_id.eq.${userProfile.id}),and(requester_id.eq.${userProfile.id},friend_id.eq.${currentUser.id})`
+        )
+      if (error) console.error('removeFriend error', error)
+      await fetchFriendship(currentUser.id, userProfile.id)
+    } finally {
+      setWorking(false)
+    }
   }
 
   async function acceptRequest() {
@@ -170,7 +210,12 @@ export default function UserProfile() {
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                 {relationStatus === 'friends' && (
-                  <span style={{ padding: '6px 10px', borderRadius: 8, background: '#e0f7fa' }}>Friends</span>
+                  <>
+                    <span style={{ padding: '6px 10px', borderRadius: 8, background: '#e0f7fa' }}>Friends</span>
+                    <button disabled={working} onClick={removeFriend} style={{ borderRadius: 8, background: '#fee2e2' }}>
+                      {working ? 'Working…' : 'Remove'}
+                    </button>
+                  </>
                 )}
                 {relationStatus === 'none' && (
                   <button disabled={working} onClick={addFriend} style={{ borderRadius: 8 }}>
@@ -197,6 +242,24 @@ export default function UserProfile() {
                 <button onClick={openChat} style={{ borderRadius: 8, background: '#4f46e5', color: '#fff' }}>Chat</button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Gallery */}
+        {userProfile && (
+          <div style={{ marginTop: 16, background: '#fff', border: '1px solid #eee', borderRadius: 12, padding: 16 }}>
+            <h3 style={{ margin: '0 0 12px 0' }}>Photos</h3>
+            {gallery.length === 0 ? (
+              <div style={{ color: '#99a3ad' }}>No photos</div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
+                {gallery.map(item => (
+                  <div key={item.path} style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #eee' }}>
+                    <img src={item.url} alt="profile" style={{ width: '100%', height: 120, objectFit: 'cover' }} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
