@@ -70,6 +70,30 @@ export default function Header() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Keep header UI in sync with authentication changes
+  useEffect(() => {
+    const { data: { subscription } = {} } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user || null
+      setAuthUser(user)
+      if (user) {
+        refreshCounts(user.id)
+        subscribeRealtime(user.id)
+      } else {
+        cleanupRealtime()
+        setPendingRequests(0)
+        setUnreadChats(0)
+      }
+    })
+    return () => {
+      try {
+        subscription?.unsubscribe?.()
+      } catch (_) {
+        // ignore
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     if (authUser) {
       // Recompute counts on route changes in case user opened chats/notifications

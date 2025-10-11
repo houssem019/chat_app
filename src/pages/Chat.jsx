@@ -225,10 +225,7 @@ export default function Chat() {
     }
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/auth')
-  }
+  
 
   const headerName = otherProfile?.username || otherProfile?.full_name || 'Chat'
 

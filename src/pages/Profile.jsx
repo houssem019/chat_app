@@ -88,17 +88,13 @@ export default function Profile() {
     }
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/auth')
-  }
+  
 
   return (
     <div style={{ minHeight: '100vh', background: '#f7f7fb' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 style={{ margin: 0 }}>My Profile</h2>
-          <button onClick={handleLogout}>Logout</button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16, alignItems: 'center', background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #eee' }}>
