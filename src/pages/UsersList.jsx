@@ -90,14 +90,14 @@ export default function UsersList() {
   
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f7fb' }}>
+    <div className="container-page">
       <div style={{ maxWidth: 840, margin: '0 auto', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
           <h2 style={{ margin: 0 }}>All Users</h2>
         </div>
 
-        <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: 12, padding: 12, marginBottom: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+        <div className="card" style={{ padding: 12, marginBottom: 12 }}>
+          <div className="filters-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa' }}>
               <option value="">All countries</option>
               {countries.map(c => (
@@ -123,7 +123,7 @@ export default function UsersList() {
               <option value="other">Other</option>
             </select>
 
-            <button onClick={applyFilters} style={{ borderRadius: 10 }}>Apply Filters</button>
+            <button className="btn btn-primary" onClick={applyFilters}>Apply Filters</button>
           </div>
         </div>
 
@@ -138,7 +138,7 @@ export default function UsersList() {
               const isSelf = currentUser?.id === u.id
               if (isSelf) return null
               return (
-                <li key={u.id} style={{ border: '1px solid #eee', background: '#fff', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <li key={u.id} className="card" style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
                   {u.avatar_url ? (
                     <img src={u.avatar_url} alt="avatar" width={48} height={48} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                   ) : (
@@ -159,17 +159,17 @@ export default function UsersList() {
                     rel ? (
                       rel.status === 'pending' ? (
                         rel.requester_id === currentUser.id ? (
-                          <button disabled style={{ opacity: 0.6 }}>Request Sent</button>
+                          <span className="btn-chip" style={{ opacity: 0.9 }}>Request Sent</span>
                         ) : (
-                          <button onClick={() => navigate('/notifications')}>Respond</button>
+                          <button className="btn" onClick={() => navigate('/notifications')}>Respond</button>
                         )
                       ) : rel.status === 'accepted' ? (
-                        <span style={{ padding: '6px 8px', borderRadius: 6, background: '#e0f7fa' }}>Friends</span>
+                        <span className="btn-chip">Friends</span>
                       ) : null
                     ) : (
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => handleChat(u)} style={{ borderRadius: 8 }}>Chat</button>
-                        <button disabled={sendingId === u.id} onClick={() => addFriend(u.id)} style={{ borderRadius: 8 }}>
+                      <div className="row gap-8">
+                        <button className="btn" onClick={() => handleChat(u)}>Chat</button>
+                        <button className="btn btn-primary" disabled={sendingId === u.id} onClick={() => addFriend(u.id)}>
                           {sendingId === u.id ? 'Sending…' : 'Add Friend'}
                         </button>
                       </div>

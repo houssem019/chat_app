@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Auth from './pages/Auth'
 import Profile from './pages/Profile'
 import UsersList from './pages/UsersList'
