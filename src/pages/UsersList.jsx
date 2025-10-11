@@ -97,7 +97,7 @@ export default function UsersList() {
         </div>
 
         <div className="card" style={{ padding: 12, marginBottom: 12 }}>
-          <div className="filters-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+          <div className="filters-grid">
             <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}>
               <option value="">All countries</option>
               {countries.map(c => (

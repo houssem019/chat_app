@@ -181,6 +181,11 @@ body {
   min-height: 100vh;
   background: var(--bg-page);
 }
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
 .wrap { flex-wrap: wrap; }
 .gap-8 { gap: 8px; }
 .gap-12 { gap: 12px; }

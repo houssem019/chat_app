@@ -242,14 +242,14 @@ export default function Chat() {
   const headerName = otherProfile?.username || otherProfile?.full_name || 'Chat'
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f7f7fb' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-page)' }}>
       <div
         className="page-header"
         style={{
           position: 'sticky',
           top: 0,
-          background: '#ffffff',
-          borderBottom: '1px solid #eee',
+          background: 'var(--header-bg)',
+          borderBottom: '1px solid var(--header-border)',
           padding: '12px 16px',
           zIndex: 5,
           display: 'flex',
@@ -309,15 +309,15 @@ export default function Chat() {
         }}
       >
         {messages.length === 0 ? (
-          <div style={{ margin: 'auto', textAlign: 'center', color: '#99a3ad' }}>
+          <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>No messages yet</div>
             <div>Say hi and start the conversation!</div>
           </div>
         ) : (
           messages.map(message => {
             const isMine = message.sender_id === authUser?.id
-            const bubbleColor = isMine ? '#4f46e5' : '#ffffff'
-            const textColor = isMine ? '#ffffff' : '#0f172a'
+            const bubbleColor = isMine ? 'var(--brand-primary)' : 'var(--chat-other-bg)'
+            const textColor = isMine ? '#ffffff' : 'var(--chat-other-text)'
             const containerJustify = isMine ? 'flex-end' : 'flex-start'
             return (
               <div key={message.id} style={{ display: 'flex', justifyContent: containerJustify, marginBottom: 8 }}>
@@ -326,7 +326,7 @@ export default function Chat() {
                     maxWidth: '72%',
                     background: bubbleColor,
                     color: textColor,
-                    border: '1px solid ' + (isMine ? '#4f46e5' : '#e5e7eb'),
+                    border: '1px solid ' + (isMine ? 'var(--brand-primary)' : 'var(--input-border)'),
                     padding: '8px 10px',
                     borderRadius: 14,
                     borderTopLeftRadius: isMine ? 14 : 4,
@@ -363,8 +363,8 @@ export default function Chat() {
         style={{
           position: 'sticky',
           bottom: 0,
-          background: '#ffffff',
-          borderTop: '1px solid #eee',
+          background: 'var(--header-bg)',
+          borderTop: '1px solid var(--header-border)',
           padding: 12,
           display: 'flex',
           alignItems: 'center',
@@ -372,14 +372,14 @@ export default function Chat() {
         }}
       >
         {imagePreviewUrl && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f1f5f9', padding: 6, borderRadius: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--subtle-surface-bg)', padding: 6, borderRadius: 8 }}>
             <img src={imagePreviewUrl} alt="preview" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }} />
             <button onClick={() => { setImageFile(null); setImagePreviewUrl(null) }} aria-label="Remove image" style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}>✕</button>
           </div>
         )}
         <label
           htmlFor="file-input"
-          style={{ cursor: 'pointer', padding: '8px 10px', border: '1px dashed #cbd5e1', borderRadius: 8, background: '#f8fafc' }}
+          style={{ cursor: 'pointer', padding: '8px 10px', border: '1px dashed var(--input-border)', borderRadius: 8, background: 'var(--muted-surface-bg)' }}
           title="Upload image"
         >
           📎
@@ -403,9 +403,10 @@ export default function Chat() {
             resize: 'none',
             padding: '10px 12px',
             borderRadius: 10,
-            border: '1px solid #e5e7eb',
+            border: '1px solid var(--input-border)',
             outline: 'none',
-            background: '#fafafa'
+            background: 'var(--input-bg)',
+            color: 'var(--text-primary)'
           }}
         />
 
@@ -415,7 +416,7 @@ export default function Chat() {
           style={{
             padding: '10px 14px',
             borderRadius: 10,
-            background: isSending || (!messageText.trim() && !imageFile) ? '#c7d2fe' : '#4f46e5',
+            background: isSending || (!messageText.trim() && !imageFile) ? 'var(--brand-primary-disabled)' : 'var(--brand-primary)',
             color: '#ffffff',
             border: 'none',
             cursor: isSending || (!messageText.trim() && !imageFile) ? 'not-allowed' : 'pointer',
