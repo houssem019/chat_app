@@ -213,16 +213,13 @@ export default function Chat() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f7f7fb' }}>
       <div
+        className="page-header"
         style={{
           position: 'sticky',
           top: 0,
           background: '#ffffff',
           borderBottom: '1px solid #eee',
           padding: '12px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
           zIndex: 5
         }}
       >
@@ -254,11 +251,16 @@ export default function Chat() {
               {headerName?.[0]?.toUpperCase() || '?'}
             </div>
           )}
-          <div style={{ fontSize: 16, fontWeight: 600 }}>{headerName}</div>
+          <div
+            onClick={() => otherProfile?.username && navigate(`/u/${otherProfile.username}`)}
+            style={{ fontSize: 16, fontWeight: 600, cursor: otherProfile?.username ? 'pointer' : 'default' }}
+            title="View profile"
+          >
+            {headerName}
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => navigate('/profile')}>Profile</button>
-          <button onClick={handleLogout}>Logout</button>
+        <div className="header-actions">
+          <button onClick={() => otherProfile?.username && navigate(`/u/${otherProfile.username}`)}>View Profile</button>
         </div>
       </div>
 
