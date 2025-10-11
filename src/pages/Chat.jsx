@@ -91,6 +91,28 @@ export default function Chat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username])
 
+  function markChatOpened(partnerId) {
+    try {
+      localStorage.setItem(`lastOpenedChatById:${partnerId}`, new Date().toISOString())
+    } catch (e) {
+      // ignore storage errors
+    }
+  }
+
+  useEffect(() => {
+    if (otherProfile?.id) {
+      markChatOpened(otherProfile.id)
+    }
+    // Also refresh when new messages arrive while on this page
+  }, [otherProfile?.id, messages.length])
+
+  useEffect(() => {
+    if (!otherProfile?.id) return
+    const onFocus = () => markChatOpened(otherProfile.id)
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [otherProfile?.id])
+
   async function fetchMessages(userId, otherId) {
     const { data, error } = await supabase
       .from('messages')
@@ -220,7 +242,11 @@ export default function Chat() {
           background: '#ffffff',
           borderBottom: '1px solid #eee',
           padding: '12px 16px',
-          zIndex: 5
+          zIndex: 5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -259,7 +285,7 @@ export default function Chat() {
             {headerName}
           </div>
         </div>
-        <div className="header-actions">
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center' }}>
           <button onClick={() => otherProfile?.username && navigate(`/u/${otherProfile.username}`)}>View Profile</button>
         </div>
       </div>
