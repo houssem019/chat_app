@@ -169,7 +169,7 @@ export default function Profile() {
             {previewUrl || profile.avatar_url ? (
               <img src={previewUrl || profile.avatar_url} alt="avatar" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: '50%' }} />
             ) : (
-              <div style={{ width: 100, height: 100, borderRadius: '50%', background: var(--input-border), display: 'grid', placeItems: 'center', color: var(--text-secondary) }}>No avatar</div>
+              <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'var(--input-border)', display: 'grid', placeItems: 'center', color: 'var(--text-secondary)' }}>No avatar</div>
             )}
             <label htmlFor="avatar-input" style={{ display: 'inline-block', marginTop: 8, padding: '6px 10px', borderRadius: 8, border: '1px dashed var(--input-border)', cursor: 'pointer', background: 'var(--muted-surface-bg)' }}>Change</label>
             <input id="avatar-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => onPickAvatar(e.target.files?.[0])} />
