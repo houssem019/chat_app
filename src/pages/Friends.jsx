@@ -63,30 +63,30 @@ export default function Friends() {
   
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f7fb' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
           <h2 style={{ margin: 0 }}>My Friends</h2>
         </div>
 
         {isLoading ? (
-          <div style={{ textAlign: 'center', color: '#99a3ad', padding: 24 }}>Loading friends…</div>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>Loading friends…</div>
         ) : friends.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#99a3ad', padding: 24 }}>No friends yet</div>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>No friends yet</div>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
             {friends.map(user => (
-              <li key={user.id} style={{ border: '1px solid #eee', background: '#fff', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate(`/chat/${user.username}`)}>
+              <li key={user.id} style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate(`/chat/${user.username}`)}>
                 {user.avatar_url ? (
                   <img src={user.avatar_url} alt="avatar" width={48} height={48} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                 ) : (
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#e3e7ff', display: 'grid', placeItems: 'center', color: '#3949ab', fontWeight: 700 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--placeholder-avatar-bg)', display: 'grid', placeItems: 'center', color: 'var(--placeholder-avatar-text)', fontWeight: 700 }}>
                     {(user.username || user.full_name || '?')[0]?.toUpperCase()}
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600 }}>{user.username || user.full_name || 'No Name'}</div>
-                  <div style={{ color: '#6b7280', fontSize: 12 }}>{user.country || 'Unknown country'}</div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{user.country || 'Unknown country'}</div>
                 </div>
                 <button style={{ borderRadius: 8 }}>Open Chat</button>
               </li>

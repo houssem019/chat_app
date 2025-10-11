@@ -98,7 +98,7 @@ export default function UsersList() {
 
         <div className="card" style={{ padding: 12, marginBottom: 12 }}>
           <div className="filters-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-            <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa' }}>
+            <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}>
               <option value="">All countries</option>
               {countries.map(c => (
                 <option key={c} value={c}>
@@ -107,7 +107,7 @@ export default function UsersList() {
               ))}
             </select>
 
-            <select value={filterAge} onChange={e => setFilterAge(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa' }}>
+            <select value={filterAge} onChange={e => setFilterAge(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}>
               <option value="">All ages</option>
               {ageOptions.map(a => (
                 <option key={a} value={a}>
@@ -116,7 +116,7 @@ export default function UsersList() {
               ))}
             </select>
 
-            <select value={filterGender} onChange={e => setFilterGender(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa' }}>
+            <select value={filterGender} onChange={e => setFilterGender(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}>
               <option value="">All genders</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -142,7 +142,7 @@ export default function UsersList() {
                   {u.avatar_url ? (
                     <img src={u.avatar_url} alt="avatar" width={48} height={48} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#e3e7ff', display: 'grid', placeItems: 'center', color: '#3949ab', fontWeight: 700 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--placeholder-avatar-bg)', display: 'grid', placeItems: 'center', color: 'var(--placeholder-avatar-text)', fontWeight: 700 }}>
                       {(u.username || u.full_name || '?')[0]?.toUpperCase()}
                     </div>
                   )}
@@ -150,7 +150,7 @@ export default function UsersList() {
                     <div onClick={(e) => { e.stopPropagation(); u.username && navigate(`/u/${u.username}`) }} style={{ cursor: u.username ? 'pointer' : 'default', fontWeight: 600 }}>
                       {u.username || u.full_name || 'No Name'}
                     </div>
-                    <div style={{ color: '#6b7280', fontSize: 12 }}>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
                       {u.country || 'Unknown country'} {u.age ? `· ${u.age}` : ''} {u.gender ? `· ${u.gender}` : ''}
                     </div>
                   </div>

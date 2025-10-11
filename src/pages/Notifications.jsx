@@ -82,9 +82,9 @@ export default function Notifications() {
         </div>
 
         {isLoading ? (
-          <div style={{ textAlign: 'center', color: '#99a3ad', padding: 24 }}>Loading requests…</div>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>Loading requests…</div>
         ) : requests.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#99a3ad', padding: 24 }}>No friend requests</div>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>No friend requests</div>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
             {requests.map(r => (
@@ -92,13 +92,13 @@ export default function Notifications() {
                 {r.requester?.avatar_url ? (
                   <img src={r.requester.avatar_url} alt="avatar" width={40} height={40} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                 ) : (
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#e3e7ff', display: 'grid', placeItems: 'center', color: '#3949ab', fontWeight: 700 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--placeholder-avatar-bg)', display: 'grid', placeItems: 'center', color: 'var(--placeholder-avatar-text)', fontWeight: 700 }}>
                     {(r.requester?.username || r.requester?.full_name || '?')[0]?.toUpperCase()}
                   </div>
                 )}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600 }}>{r.requester?.username || r.requester?.full_name || 'Unknown user'}</div>
-                  <div style={{ color: '#6b7280', fontSize: 12 }}>wants to be your friend</div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>wants to be your friend</div>
                 </div>
                 <div className="row gap-8">
                   <button className="btn btn-primary" disabled={actionId === r.requester_id} onClick={() => acceptRequest(r.requester_id)}>

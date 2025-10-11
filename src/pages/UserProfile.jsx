@@ -167,7 +167,7 @@ export default function UserProfile() {
         </div>
 
         {!userProfile ? (
-          <div style={{ textAlign: 'center', color: '#99a3ad', padding: 24 }}>Loading…</div>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>Loading…</div>
         ) : (
           <div className="card profile-grid" style={{ padding: 16, display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16 }}>
             <div>
@@ -183,10 +183,10 @@ export default function UserProfile() {
                     width: 100,
                     height: 100,
                     borderRadius: '50%',
-                    background: '#e3e7ff',
+                    background: 'var(--placeholder-avatar-bg)',
                     display: 'grid',
                     placeItems: 'center',
-                    color: '#3949ab',
+                    color: 'var(--placeholder-avatar-text)',
                     fontWeight: 700
                   }}
                 >
@@ -199,7 +199,7 @@ export default function UserProfile() {
               <div style={{ fontWeight: 700, fontSize: 18 }}>
                 {userProfile.full_name || userProfile.username}
               </div>
-              <div style={{ color: '#6b7280' }}>
+              <div style={{ color: 'var(--text-secondary)' }}>
                 {(userProfile.country || 'Unknown country')}
                 {userProfile.age ? ` · ${userProfile.age}` : ''}
                 {userProfile.gender ? ` · ${userProfile.gender}` : ''}
@@ -211,7 +211,6 @@ export default function UserProfile() {
               <div className="row gap-8 wrap" style={{ marginTop: 8 }}>
                 {relationStatus === 'friends' && (
                   <>
-                    <span className="btn-chip">Friends</span>
                     <button className="btn btn-danger" disabled={working} onClick={removeFriend}>
                       {working ? 'Working…' : 'Remove'}
                     </button>
@@ -223,7 +222,7 @@ export default function UserProfile() {
                   </button>
                 )}
                 {relationStatus === 'pending-out' && (
-                  <span className="btn-chip" style={{ background: '#fff7ed', borderColor: '#ffedd5', color: '#9a3412' }}>Request Sent</span>
+                  <span className="btn-chip" style={{ background: 'var(--warning-chip-bg)', borderColor: 'var(--warning-chip-border)', color: 'var(--warning-chip-text)' }}>Request Sent</span>
                 )}
                 {relationStatus === 'pending-in' && (
                   <>
@@ -244,11 +243,11 @@ export default function UserProfile() {
           <div className="card" style={{ marginTop: 16, padding: 16 }}>
             <h3 style={{ margin: '0 0 12px 0' }}>Photos</h3>
             {gallery.length === 0 ? (
-              <div style={{ color: '#99a3ad' }}>No photos</div>
+              <div style={{ color: 'var(--text-muted)' }}>No photos</div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
                 {gallery.map(item => (
-                  <div key={item.path} style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #eee' }}>
+                  <div key={item.path} style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid var(--card-border)' }}>
                     <img src={item.url} alt="profile" style={{ width: '100%', height: 120, objectFit: 'cover' }} />
                   </div>
                 ))}

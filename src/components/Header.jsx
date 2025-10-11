@@ -25,7 +25,7 @@ function Badge({ count }) {
         height: 18,
         padding: '0 5px',
         borderRadius: 9,
-        background: '#ef4444',
+        background: 'var(--unread-dot-bg)',
         color: '#fff',
         fontSize: 11,
         fontWeight: 700,
@@ -247,7 +247,7 @@ export default function Header() {
   const isAuthed = useMemo(() => Boolean(authUser), [authUser])
 
   return (
-    <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#ffffff', borderBottom: '1px solid #eee', padding: '10px 16px' }}>
+    <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--header-bg)', borderBottom: '1px solid var(--header-border)', padding: '10px 16px' }}>
       <div className="header-inner">
         <Brand onClick={() => navigate('/')} />
         <div className="row gap-8 header-buttons" style={{ alignItems: 'center' }}>

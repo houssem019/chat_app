@@ -169,9 +169,9 @@ export default function Profile() {
             {previewUrl || profile.avatar_url ? (
               <img src={previewUrl || profile.avatar_url} alt="avatar" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: '50%' }} />
             ) : (
-              <div style={{ width: 100, height: 100, borderRadius: '50%', background: '#e5e7eb', display: 'grid', placeItems: 'center', color: '#6b7280' }}>No avatar</div>
+              <div style={{ width: 100, height: 100, borderRadius: '50%', background: var(--input-border), display: 'grid', placeItems: 'center', color: var(--text-secondary) }}>No avatar</div>
             )}
-            <label htmlFor="avatar-input" style={{ display: 'inline-block', marginTop: 8, padding: '6px 10px', borderRadius: 8, border: '1px dashed #cbd5e1', cursor: 'pointer', background: '#f8fafc' }}>Change</label>
+            <label htmlFor="avatar-input" style={{ display: 'inline-block', marginTop: 8, padding: '6px 10px', borderRadius: 8, border: '1px dashed var(--input-border)', cursor: 'pointer', background: 'var(--muted-surface-bg)' }}>Change</label>
             <input id="avatar-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => onPickAvatar(e.target.files?.[0])} />
           </div>
 
@@ -180,20 +180,20 @@ export default function Profile() {
               placeholder="Username"
               value={profile.username || ''}
               onChange={e => setProfile({ ...profile, username: e.target.value })}
-              style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa' }}
+              style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
             />
             <input
               placeholder="Full Name"
               value={profile.full_name || ''}
               onChange={e => setProfile({ ...profile, full_name: e.target.value })}
-              style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa' }}
+              style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
             />
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               <select
                 value={profile.age || ''}
                 onChange={e => setProfile({ ...profile, age: Number(e.target.value) })}
-                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa' }}
+                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
               >
                 <option value="">Select age</option>
                 {ageOptions.map(a => (
@@ -204,7 +204,7 @@ export default function Profile() {
               <select
                 value={profile.country || ''}
                 onChange={e => setProfile({ ...profile, country: e.target.value })}
-                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa' }}
+                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
               >
                 <option value="">Select country</option>
                 {countries.map(c => (
@@ -215,7 +215,7 @@ export default function Profile() {
               <select
                 value={profile.gender || ''}
                 onChange={e => setProfile({ ...profile, gender: e.target.value })}
-                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa' }}
+                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
               >
                 <option value="">Select gender</option>
                 {genderOptions.map(g => (
@@ -229,7 +229,7 @@ export default function Profile() {
               value={profile.bio || ''}
               onChange={e => setProfile({ ...profile, bio: e.target.value })}
               rows={3}
-              style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#fafafa' }}
+              style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
             />
           </div>
         </div>
@@ -251,18 +251,18 @@ export default function Profile() {
             </div>
           </div>
           {gallery.length === 0 ? (
-            <div style={{ color: '#99a3ad' }}>No photos yet.</div>
+            <div style={{ color: 'var(--text-muted)' }}>No photos yet.</div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
               {gallery.map(item => (
-                <div key={item.path} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: '1px solid #eee' }}>
+                <div key={item.path} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--card-border)' }}>
                   <img src={item.url} alt="profile" style={{ width: '100%', height: 120, objectFit: 'cover' }} />
                   <button onClick={() => deletePhoto(item)} title="Remove" style={{ position: 'absolute', top: 6, right: 6, borderRadius: 8, border: 'none', background: '#111827cc', color: '#fff', cursor: 'pointer', padding: '4px 6px' }}>✕</button>
                 </div>
               ))}
             </div>
           )}
-          <div style={{ marginTop: 8, color: '#6b7280', fontSize: 12 }}>You can upload up to 5 photos.</div>
+          <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: 12 }}>You can upload up to 5 photos.</div>
         </div>
       </div>
     </div>
