@@ -60,10 +60,7 @@ export default function Friends() {
     }
   }, [currentUser])
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/auth')
-  }
+  
 
   return (
     <div style={{ minHeight: '100vh', background: '#f7f7fb' }}>

@@ -82,23 +82,13 @@ export default function UsersList() {
     navigate(`/chat/${user.username}`)
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/auth')
-  }
+  
 
   return (
     <div style={{ minHeight: '100vh', background: '#f7f7fb' }}>
       <div style={{ maxWidth: 840, margin: '0 auto', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
           <h2 style={{ margin: 0 }}>All Users</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => navigate('/notifications')}>Notifications</button>
-            <button onClick={() => navigate('/friends')}>Friends</button>
-            <button onClick={() => navigate('/profile')}>Profile</button>
-            <button onClick={() => navigate('/chats')}>My Chats</button>
-            <button onClick={handleLogout}>Logout</button>
-          </div>
         </div>
 
         <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: 12, padding: 12, marginBottom: 12 }}>
