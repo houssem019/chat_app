@@ -75,7 +75,7 @@ export default function Notifications() {
   
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f7fb' }}>
+    <div className="container-page">
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
           <h2 style={{ margin: 0 }}>Notifications</h2>
@@ -88,7 +88,7 @@ export default function Notifications() {
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
             {requests.map(r => (
-              <li key={r.requester_id} style={{ border: '1px solid #eee', background: '#fff', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <li key={r.requester_id} className="card" style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
                 {r.requester?.avatar_url ? (
                   <img src={r.requester.avatar_url} alt="avatar" width={40} height={40} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                 ) : (
@@ -100,11 +100,11 @@ export default function Notifications() {
                   <div style={{ fontWeight: 600 }}>{r.requester?.username || r.requester?.full_name || 'Unknown user'}</div>
                   <div style={{ color: '#6b7280', fontSize: 12 }}>wants to be your friend</div>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button disabled={actionId === r.requester_id} onClick={() => acceptRequest(r.requester_id)} style={{ borderRadius: 8 }}>
+                <div className="row gap-8">
+                  <button className="btn btn-primary" disabled={actionId === r.requester_id} onClick={() => acceptRequest(r.requester_id)}>
                     {actionId === r.requester_id ? 'Working…' : 'Accept'}
                   </button>
-                  <button disabled={actionId === r.requester_id} onClick={() => removeRequest(r.requester_id)} style={{ borderRadius: 8, background: '#fee2e2' }}>
+                  <button className="btn btn-danger" disabled={actionId === r.requester_id} onClick={() => removeRequest(r.requester_id)}>
                     Remove
                   </button>
                 </div>

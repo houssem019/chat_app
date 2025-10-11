@@ -4,9 +4,9 @@ import { supabase } from '../supabaseClient'
 
 function Brand({ onClick }) {
   return (
-    <div onClick={onClick} style={{ display: 'flex', alignItems: 'baseline', gap: 6, cursor: 'pointer', userSelect: 'none' }} title="Go to home">
-      <span style={{ fontWeight: 800, fontSize: 20, letterSpacing: 0.3, color: '#111827' }}>Chat</span>
-      <span style={{ fontWeight: 800, fontSize: 20, letterSpacing: 0.3, color: '#4f46e5' }}>Twins</span>
+    <div onClick={onClick} className="row gap-8" style={{ alignItems: 'baseline', cursor: 'pointer', userSelect: 'none' }} title="Go to home">
+      <span className="brand-title">Chat</span>
+      <span className="brand-accent">Twins</span>
     </div>
   )
 }
@@ -247,36 +247,27 @@ export default function Header() {
   const isAuthed = useMemo(() => Boolean(authUser), [authUser])
 
   return (
-    <div
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-        background: '#ffffff',
-        borderBottom: '1px solid #eee',
-        padding: '10px 16px'
-      }}
-    >
-      <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+    <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#ffffff', borderBottom: '1px solid #eee', padding: '10px 16px' }}>
+      <div className="header-inner">
         <Brand onClick={() => navigate('/')} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="row gap-8 header-buttons" style={{ alignItems: 'center' }}>
           {isAuthed ? (
             <>
-              <button onClick={() => navigate('/')} style={{ borderRadius: 8 }}>All Users</button>
-              <button onClick={() => navigate('/chats')} style={{ borderRadius: 8 }}>
+              <button className="btn" onClick={() => navigate('/')}>All Users</button>
+              <button className="btn" onClick={() => navigate('/chats')}>
                 My Chats
                 <Badge count={unreadChats} />
               </button>
-              <button onClick={() => navigate('/friends')} style={{ borderRadius: 8 }}>Friends</button>
-              <button onClick={() => navigate('/notifications')} style={{ borderRadius: 8 }}>
+              <button className="btn" onClick={() => navigate('/friends')}>Friends</button>
+              <button className="btn" onClick={() => navigate('/notifications')}>
                 Notifications
                 <Badge count={pendingRequests} />
               </button>
-              <button onClick={() => navigate('/profile')} style={{ borderRadius: 8 }}>Profile</button>
-              <button onClick={handleLogout} style={{ borderRadius: 8 }}>Logout</button>
+              <button className="btn" onClick={() => navigate('/profile')}>Profile</button>
+              <button className="btn btn-danger" onClick={handleLogout}>Logout</button>
             </>
           ) : (
-            <button onClick={() => navigate('/auth')} style={{ borderRadius: 8 }}>Login</button>
+            <button className="btn btn-primary" onClick={() => navigate('/auth')}>Login</button>
           )}
         </div>
       </div>

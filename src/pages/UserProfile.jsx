@@ -160,7 +160,7 @@ export default function UserProfile() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f7fb' }}>
+    <div className="container-page">
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 16 }}>
         <div className="page-header">
           <h2 style={{ margin: 0 }}>{headerName}</h2>
@@ -169,7 +169,7 @@ export default function UserProfile() {
         {!userProfile ? (
           <div style={{ textAlign: 'center', color: '#99a3ad', padding: 24 }}>Loading…</div>
         ) : (
-          <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: 12, padding: 16, display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16 }}>
+          <div className="card profile-grid" style={{ padding: 16, display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16 }}>
             <div>
               {userProfile.avatar_url ? (
                 <img
@@ -195,7 +195,7 @@ export default function UserProfile() {
               )}
             </div>
 
-            <div style={{ display: 'grid', gap: 10 }}>
+              <div style={{ display: 'grid', gap: 10 }}>
               <div style={{ fontWeight: 700, fontSize: 18 }}>
                 {userProfile.full_name || userProfile.username}
               </div>
@@ -208,38 +208,32 @@ export default function UserProfile() {
                 <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{userProfile.bio}</div>
               )}
 
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+              <div className="row gap-8 wrap" style={{ marginTop: 8 }}>
                 {relationStatus === 'friends' && (
                   <>
-                    <span style={{ padding: '6px 10px', borderRadius: 8, background: '#e0f7fa' }}>Friends</span>
-                    <button disabled={working} onClick={removeFriend} style={{ borderRadius: 8, background: '#fee2e2' }}>
+                    <span className="btn-chip">Friends</span>
+                    <button className="btn btn-danger" disabled={working} onClick={removeFriend}>
                       {working ? 'Working…' : 'Remove'}
                     </button>
                   </>
                 )}
                 {relationStatus === 'none' && (
-                  <button disabled={working} onClick={addFriend} style={{ borderRadius: 8 }}>
+                  <button className="btn btn-primary" disabled={working} onClick={addFriend}>
                     {working ? 'Working…' : 'Add Friend'}
                   </button>
                 )}
                 {relationStatus === 'pending-out' && (
-                  <span style={{ padding: '6px 10px', borderRadius: 8, background: '#fff7ed', color: '#9a3412' }}>Request Sent</span>
+                  <span className="btn-chip" style={{ background: '#fff7ed', borderColor: '#ffedd5', color: '#9a3412' }}>Request Sent</span>
                 )}
                 {relationStatus === 'pending-in' && (
                   <>
-                    <button disabled={working} onClick={acceptRequest} style={{ borderRadius: 8 }}>
+                    <button className="btn btn-primary" disabled={working} onClick={acceptRequest}>
                       {working ? 'Working…' : 'Accept Request'}
                     </button>
-                    <button
-                      disabled={working}
-                      onClick={declineRequest}
-                      style={{ borderRadius: 8, background: '#fee2e2' }}
-                    >
-                      Decline
-                    </button>
+                    <button className="btn btn-danger" disabled={working} onClick={declineRequest}>Decline</button>
                   </>
                 )}
-                <button onClick={openChat} style={{ borderRadius: 8, background: '#4f46e5', color: '#fff' }}>Chat</button>
+                <button className="btn btn-primary" onClick={openChat}>Chat</button>
               </div>
             </div>
           </div>
@@ -247,7 +241,7 @@ export default function UserProfile() {
 
         {/* Gallery */}
         {userProfile && (
-          <div style={{ marginTop: 16, background: '#fff', border: '1px solid #eee', borderRadius: 12, padding: 16 }}>
+          <div className="card" style={{ marginTop: 16, padding: 16 }}>
             <h3 style={{ margin: '0 0 12px 0' }}>Photos</h3>
             {gallery.length === 0 ? (
               <div style={{ color: '#99a3ad' }}>No photos</div>

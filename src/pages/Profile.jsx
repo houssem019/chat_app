@@ -158,13 +158,13 @@ export default function Profile() {
   
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f7f7fb' }}>
+    <div className="container-page">
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 style={{ margin: 0 }}>My Profile</h2>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16, alignItems: 'center', background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #eee' }}>
+        <div className="card profile-grid" style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16, alignItems: 'center', padding: 16 }}>
           <div>
             {previewUrl || profile.avatar_url ? (
               <img src={previewUrl || profile.avatar_url} alt="avatar" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: '50%' }} />
@@ -235,16 +235,12 @@ export default function Profile() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-          <button
-            onClick={updateProfile}
-            disabled={isSaving}
-            style={{ padding: '10px 14px', borderRadius: 10, background: isSaving ? '#c7d2fe' : '#4f46e5', color: '#fff', border: 'none', cursor: isSaving ? 'not-allowed' : 'pointer', fontWeight: 600 }}
-          >
+          <button className="btn btn-primary" onClick={updateProfile} disabled={isSaving}>
             {isSaving ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
 
-        <div style={{ marginTop: 20, background: '#fff', border: '1px solid #eee', borderRadius: 12, padding: 16 }}>
+        <div className="card" style={{ marginTop: 20, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <h3 style={{ margin: 0 }}>My Photos</h3>
             <div>
