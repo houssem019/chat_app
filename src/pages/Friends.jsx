@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useNavigate } from 'react-router-dom'
 
 export default function Friends() {
   const [currentUser, setCurrentUser] = useState(null)
   const [friends, setFriends] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return navigate('/auth')
       setCurrentUser(user)
-      fetchFriends(user.id)
+      fetchFriends(user.id).finally(() => setIsLoading(false))
     })
   }, [])
 
-  // Fetch friends function with explicit foreign key join
   async function fetchFriends(userId) {
     const { data, error } = await supabase
       .from('friendships')
@@ -36,17 +36,14 @@ export default function Friends() {
     }
   }
 
-  // Realtime subscription for friendship changes
   useEffect(() => {
     if (!currentUser) return
-
     const channel = supabase
       .channel('friendship-updates')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'friendships' },
         payload => {
-          // Only refresh if currentUser is involved
           if (
             payload.new?.requester_id === currentUser.id ||
             payload.new?.friend_id === currentUser.id ||
@@ -58,7 +55,6 @@ export default function Friends() {
         }
       )
       .subscribe()
-
     return () => {
       supabase.removeChannel(channel)
     }
@@ -70,38 +66,44 @@ export default function Friends() {
   }
 
   return (
-    <div className="container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-        <h2>My Friends</h2>
-        <div>
-          <button onClick={() => navigate('/')}>All Users</button>{' '}
-          <button onClick={() => navigate('/notifications')}>Notifications</button>{' '}
-          <button onClick={() => navigate('/profile')}>Profile</button>{' '}
-          <button onClick={() => navigate('/chats')}>My Chats</button>{' '}
-          <button onClick={handleLogout}>Logout</button>
+    <div style={{ minHeight: '100vh', background: '#f7f7fb' }}>
+      <div style={{ maxWidth: 720, margin: '0 auto', padding: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h2 style={{ margin: 0 }}>My Friends</h2>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => navigate('/')}>All Users</button>
+            <button onClick={() => navigate('/notifications')}>Notifications</button>
+            <button onClick={() => navigate('/profile')}>Profile</button>
+            <button onClick={() => navigate('/chats')}>My Chats</button>
+            <button onClick={handleLogout}>Logout</button>
+          </div>
         </div>
-      </div>
 
-      {friends.length === 0 && <p>No friends yet.</p>}
-      <ul>
-        {friends.map(user => (
-          <li
-            key={user.id}
-            style={{ cursor: 'pointer' }}
-            onClick={() => navigate(`/chat/${user.username}`)}
-          >
-            {user.avatar_url && (
-              <img
-                src={user.avatar_url}
-                alt="avatar"
-                width={40}
-                style={{ borderRadius: '50%', marginRight: '10px' }}
-              />
-            )}
-            {user.username || user.full_name}
-          </li>
-        ))}
-      </ul>
+        {isLoading ? (
+          <div style={{ textAlign: 'center', color: '#99a3ad', padding: 24 }}>Loading friends…</div>
+        ) : friends.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#99a3ad', padding: 24 }}>No friends yet</div>
+        ) : (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+            {friends.map(user => (
+              <li key={user.id} style={{ border: '1px solid #eee', background: '#fff', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate(`/chat/${user.username}`)}>
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="avatar" width={48} height={48} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#e3e7ff', display: 'grid', placeItems: 'center', color: '#3949ab', fontWeight: 700 }}>
+                    {(user.username || user.full_name || '?')[0]?.toUpperCase()}
+                  </div>
+                )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>{user.username || user.full_name || 'No Name'}</div>
+                  <div style={{ color: '#6b7280', fontSize: 12 }}>{user.country || 'Unknown country'}</div>
+                </div>
+                <button style={{ borderRadius: 8 }}>Open Chat</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }
