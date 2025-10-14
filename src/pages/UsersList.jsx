@@ -9,7 +9,8 @@ export default function UsersList() {
   const [currentUser, setCurrentUser] = useState(null)
   const [friendships, setFriendships] = useState([])
   const [filterCountry, setFilterCountry] = useState('')
-  const [filterAge, setFilterAge] = useState('')
+  const [filterAgeFrom, setFilterAgeFrom] = useState('')
+  const [filterAgeTo, setFilterAgeTo] = useState('')
   const [filterGender, setFilterGender] = useState('')
   const [sendingId, setSendingId] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -27,7 +28,6 @@ export default function UsersList() {
   }, [])
 
   async function fetchUsers() {
-    // Fetch all users; we will filter out the current user after we know them
     const { data, error } = await supabase.from('profiles').select('*')
     if (error) return console.error('fetchUsers error', error)
     const list = data || []
@@ -51,7 +51,8 @@ export default function UsersList() {
   function applyFilters() {
     let temp = [...users]
     if (filterCountry) temp = temp.filter(u => u.country === filterCountry)
-    if (filterAge) temp = temp.filter(u => Number(u.age) === Number(filterAge))
+    if (filterAgeFrom) temp = temp.filter(u => Number(u.age) >= Number(filterAgeFrom))
+    if (filterAgeTo) temp = temp.filter(u => Number(u.age) <= Number(filterAgeTo))
     if (filterGender) temp = temp.filter(u => (u.gender || '').toLowerCase() === filterGender.toLowerCase())
     if (currentUser?.id) temp = temp.filter(u => u.id !== currentUser.id)
     setFilteredUsers(temp)
@@ -87,8 +88,6 @@ export default function UsersList() {
     navigate(`/chat/${user.username}`)
   }
 
-  
-
   return (
     <div className="container-page">
       <div style={{ maxWidth: 840, margin: '0 auto', padding: 16 }}>
@@ -97,22 +96,27 @@ export default function UsersList() {
         </div>
 
         <div className="card" style={{ padding: 12, marginBottom: 12 }}>
-          <div className="filters-grid">
+          <div className="filters-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8 }}>
             <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}>
               <option value="">All countries</option>
               {countries.map(c => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
 
-            <select value={filterAge} onChange={e => setFilterAge(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}>
-              <option value="">All ages</option>
+            {/* Age From dropdown */}
+            <select value={filterAgeFrom} onChange={e => setFilterAgeFrom(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}>
+              <option value="">Age from</option>
               {ageOptions.map(a => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+
+            {/* Age To dropdown */}
+            <select value={filterAgeTo} onChange={e => setFilterAgeTo(e.target.value)} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}>
+              <option value="">Age to</option>
+              {ageOptions.map(a => (
+                <option key={a} value={a}>{a}</option>
               ))}
             </select>
 

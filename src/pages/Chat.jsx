@@ -23,6 +23,11 @@ export default function Chat() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null)
   const [isSending, setIsSending] = useState(false)
 
+  const [reporting, setReporting] = useState(false)
+  const [reportIssue, setReportIssue] = useState('')
+  const [reportDetails, setReportDetails] = useState('')
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false)
+
   const bottomRef = useRef(null)
   const channelRef = useRef(null)
   const messageIdsRef = useRef(new Set())
@@ -94,21 +99,14 @@ export default function Chat() {
   function markChatOpened(partnerId) {
     try {
       localStorage.setItem(`lastOpenedChatById:${partnerId}`, new Date().toISOString())
-    } catch (e) {
-      // ignore storage errors
-    }
+    } catch (e) {}
     try {
       window.dispatchEvent(new Event('chats:lastOpened'))
-    } catch (_) {
-      // ignore
-    }
+    } catch (_) {}
   }
 
   useEffect(() => {
-    if (otherProfile?.id) {
-      markChatOpened(otherProfile.id)
-    }
-    // Also refresh when new messages arrive while on this page
+    if (otherProfile?.id) markChatOpened(otherProfile.id)
   }, [otherProfile?.id, messages.length])
 
   useEffect(() => {
@@ -218,7 +216,6 @@ export default function Chat() {
         setMessages(prev => prev.map(m => (m.id === tempId ? inserted : m)))
         scrollToBottom()
       } else {
-        // already handled by realtime; drop optimistic
         setMessages(prev => prev.filter(m => m.id !== tempId))
       }
     } catch (err) {
@@ -237,7 +234,28 @@ export default function Chat() {
     }
   }
 
-  
+  async function submitReport() {
+    if (!reportIssue || !authUser || !otherProfile) return
+    setIsSubmittingReport(true)
+    try {
+      const { error } = await supabase.from('reports').insert({
+        reporter_id: authUser.id,
+        reported_id: otherProfile.id,
+        issue: reportIssue,
+        details: reportDetails || null
+      })
+      if (error) throw error
+      alert('Report submitted successfully')
+      setReporting(false)
+      setReportIssue('')
+      setReportDetails('')
+    } catch (err) {
+      console.error('submitReport error', err)
+      alert('Failed to submit report')
+    } finally {
+      setIsSubmittingReport(false)
+    }
+  }
 
   const headerName = otherProfile?.username || otherProfile?.full_name || 'Chat'
 
@@ -259,30 +277,11 @@ export default function Chat() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => navigate('/chats')} aria-label="Back" style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}>
-            ⟵
-          </button>
+          <button onClick={() => navigate('/chats')} aria-label="Back" style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}>⟵</button>
           {otherProfile?.avatar_url ? (
-            <img
-              src={otherProfile.avatar_url}
-              alt="avatar"
-              width={36}
-              height={36}
-              style={{ borderRadius: '50%', objectFit: 'cover' }}
-            />
+            <img src={otherProfile.avatar_url} alt="avatar" width={36} height={36} style={{ borderRadius: '50%', objectFit: 'cover' }} />
           ) : (
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                background: '#e3e7ff',
-                display: 'grid',
-                placeItems: 'center',
-                color: '#3949ab',
-                fontWeight: 700
-              }}
-            >
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#e3e7ff', display: 'grid', placeItems: 'center', color: '#3949ab', fontWeight: 700 }}>
               {headerName?.[0]?.toUpperCase() || '?'}
             </div>
           )}
@@ -294,20 +293,48 @@ export default function Chat() {
             {headerName}
           </div>
         </div>
-        <div className="header-actions" style={{ display: 'flex', alignItems: 'center' }}>
+
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button onClick={() => otherProfile?.username && navigate(`/u/${otherProfile.username}`)}>View Profile</button>
+          <button onClick={() => setReporting(true)} style={{ background: 'red', color: 'white', border: 'none', padding: '10px 12px', borderRadius: 6 }}>Report</button>
         </div>
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '12px 12px 8px',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
+      {/* Report Modal */}
+      {reporting && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ background: 'white', padding: 24, borderRadius: 12, width: 320, maxWidth: '90%' }}>
+            <h3 style={{ marginTop: 0, color: 'black' }}>Report {headerName}</h3>
+            <label style={{ display: 'block', marginBottom: 8 , color: 'black' }}>
+              Issue:
+              <select value={reportIssue} onChange={e => setReportIssue(e.target.value)} style={{ width: '100%', marginTop: 4, padding: 6 }}>
+                <option value="">Select an issue</option>
+                <option value="Spam or scam">Spam or scam</option>
+                <option value="Harassment or bullying">Harassment or bullying</option>
+                <option value="Inappropriate content">Inappropriate content</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+            <label style={{ display: 'block', marginBottom: 12, color: 'black' }}>
+              Details (optional):
+              <textarea value={reportDetails} onChange={e => setReportDetails(e.target.value)} rows={3} style={{ width: '100%', marginTop: 4, padding: 6 }} />
+            </label>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button onClick={() => setReporting(false)} style={{ padding: '6px 12px', borderRadius: 6 }}>Cancel</button>
+              <button
+                onClick={submitReport}
+                disabled={!reportIssue || isSubmittingReport}
+                style={{ padding: '6px 12px', borderRadius: 6, background: 'red', color: 'white', border: 'none' }}
+              >
+                {isSubmittingReport ? 'Submitting…' : 'Submit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Messages */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 8px', display: 'flex', flexDirection: 'column' }}>
         {messages.length === 0 ? (
           <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>No messages yet</div>
@@ -321,33 +348,20 @@ export default function Chat() {
             const containerJustify = isMine ? 'flex-end' : 'flex-start'
             return (
               <div key={message.id} style={{ display: 'flex', justifyContent: containerJustify, marginBottom: 8 }}>
-                <div
-                  style={{
-                    maxWidth: '72%',
-                    background: bubbleColor,
-                    color: textColor,
-                    border: '1px solid ' + (isMine ? 'var(--brand-primary)' : 'var(--input-border)'),
-                    padding: '8px 10px',
-                    borderRadius: 14,
-                    borderTopLeftRadius: isMine ? 14 : 4,
-                    borderTopRightRadius: isMine ? 4 : 14,
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-                    transition: 'transform 120ms ease',
-                  }}
-                >
+                <div style={{
+                  maxWidth: '72%',
+                  background: bubbleColor,
+                  color: textColor,
+                  border: '1px solid ' + (isMine ? 'var(--brand-primary)' : 'var(--input-border)'),
+                  padding: '8px 10px',
+                  borderRadius: 14,
+                  borderTopLeftRadius: isMine ? 14 : 4,
+                  borderTopRightRadius: isMine ? 4 : 14,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                  transition: 'transform 120ms ease',
+                }}>
                   {message.content && <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{message.content}</div>}
-                  {message.image_url && (
-                    <img
-                      src={message.image_url}
-                      alt="attachment"
-                      style={{
-                        display: 'block',
-                        maxWidth: '100%',
-                        borderRadius: 10,
-                        marginTop: message.content ? 8 : 0
-                      }}
-                    />
-                  )}
+                  {message.image_url && <img src={message.image_url} alt="attachment" style={{ display: 'block', maxWidth: '100%', borderRadius: 10, marginTop: message.content ? 8 : 0 }} />}
                   <div style={{ fontSize: 11, opacity: 0.8, marginTop: 6, textAlign: 'right' }}>
                     {formatTime(message.created_at)} {String(message.id).startsWith('temp-') ? '· sending…' : ''}
                   </div>
@@ -359,70 +373,20 @@ export default function Chat() {
         <div ref={bottomRef} />
       </div>
 
-      <div
-        style={{
-          position: 'sticky',
-          bottom: 0,
-          background: 'var(--header-bg)',
-          borderTop: '1px solid var(--header-border)',
-          padding: 12,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8
-        }}
-      >
+      {/* Input */}
+      <div style={{ position: 'sticky', bottom: 0, background: 'var(--header-bg)', borderTop: '1px solid var(--header-border)', padding: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
         {imagePreviewUrl && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--subtle-surface-bg)', padding: 6, borderRadius: 8 }}>
             <img src={imagePreviewUrl} alt="preview" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }} />
             <button onClick={() => { setImageFile(null); setImagePreviewUrl(null) }} aria-label="Remove image" style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}>✕</button>
           </div>
         )}
-        <label
-          htmlFor="file-input"
-          style={{ cursor: 'pointer', padding: '8px 10px', border: '1px dashed var(--input-border)', borderRadius: 8, background: 'var(--muted-surface-bg)' }}
-          title="Upload image"
-        >
-          📎
-        </label>
-        <input
-          id="file-input"
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={e => onPickImage(e.target.files?.[0])}
-        />
+        <label htmlFor="file-input" style={{ cursor: 'pointer', padding: '8px 10px', border: '1px dashed var(--input-border)', borderRadius: 8, background: 'var(--muted-surface-bg)' }} title="Upload image">📎</label>
+        <input id="file-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => onPickImage(e.target.files?.[0])} />
 
-        <textarea
-          value={messageText}
-          onChange={e => setMessageText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message"
-          rows={1}
-          style={{
-            flex: 1,
-            resize: 'none',
-            padding: '10px 12px',
-            borderRadius: 10,
-            border: '1px solid var(--input-border)',
-            outline: 'none',
-            background: 'var(--input-bg)',
-            color: 'var(--text-primary)'
-          }}
-        />
+        <textarea value={messageText} onChange={e => setMessageText(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type a message" rows={1} style={{ flex: 1, resize: 'none', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', outline: 'none', background: 'var(--input-bg)', color: 'var(--text-primary)' }} />
 
-        <button
-          onClick={sendMessage}
-          disabled={isSending || (!messageText.trim() && !imageFile) || !isReady}
-          style={{
-            padding: '10px 14px',
-            borderRadius: 10,
-            background: isSending || (!messageText.trim() && !imageFile) ? 'var(--brand-primary-disabled)' : 'var(--brand-primary)',
-            color: '#ffffff',
-            border: 'none',
-            cursor: isSending || (!messageText.trim() && !imageFile) ? 'not-allowed' : 'pointer',
-            fontWeight: 600
-          }}
-        >
+        <button onClick={sendMessage} disabled={isSending || (!messageText.trim() && !imageFile) || !isReady} style={{ padding: '10px 14px', borderRadius: 10, background: isSending || (!messageText.trim() && !imageFile) ? 'var(--brand-primary-disabled)' : 'var(--brand-primary)', color: '#ffffff', border: 'none', cursor: isSending || (!messageText.trim() && !imageFile) ? 'not-allowed' : 'pointer', fontWeight: 600 }}>
           {isSending ? 'Sending…' : 'Send'}
         </button>
       </div>

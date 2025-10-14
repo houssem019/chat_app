@@ -33,7 +33,6 @@ export default function ChatsList() {
       return
     }
 
-    // Fetch latest messages for unread indicator
     const { data: latestMsgs } = await supabase
       .from('messages')
       .select('*')
@@ -52,6 +51,34 @@ export default function ChatsList() {
 
     const { data: users } = await supabase.from('profiles').select('*').in('id', userIds)
     setChats(users || [])
+  }
+
+  // Delete all messages with a partner
+  async function deleteChat(partnerId) {
+    if (!currentUser) return
+    if (!window.confirm('Are you sure you want to delete this chat?')) return
+
+    try {
+      // Delete messages where currentUser is sender or receiver with partnerId
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .or(
+          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${currentUser.id})`
+        )
+      if (error) throw error
+
+      // Update UI
+      setChats(prev => prev.filter(c => c.id !== partnerId))
+      setLatestByPartner(prev => {
+        const copy = { ...prev }
+        delete copy[partnerId]
+        return copy
+      })
+    } catch (e) {
+      console.error('deleteChat error', e)
+      alert('Failed to delete chat.')
+    }
   }
 
   return (
@@ -73,23 +100,67 @@ export default function ChatsList() {
               const lastOpened = lastOpenedIso ? Date.parse(lastOpenedIso) : 0
               const hasUnread = latest ? (latest.sender_id !== currentUser?.id && Date.parse(latest.created_at) > lastOpened) : false
               return (
-                <li key={user.id} style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', borderRadius: 12, padding: 10, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => navigate(`/chat/${user.username}`)}>
-                  {user.avatar_url ? (
-                    <img src={user.avatar_url} alt="avatar" width={40} height={40} style={{ borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--placeholder-avatar-bg)', display: 'grid', placeItems: 'center', color: 'var(--placeholder-avatar-text)', fontWeight: 700 }}>
-                      {(user.username || user.full_name || '?')[0]?.toUpperCase()}
-                    </div>
-                  )}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {user.username || user.full_name}
-                      {hasUnread && (
-                        <span title="New messages" style={{ width: 8, height: 8, borderRadius: 4, background: 'var(--unread-dot-bg)', display: 'inline-block' }} />
-                      )}
+                <li
+                  key={user.id}
+                  style={{
+                    border: '1px solid var(--card-border)',
+                    background: 'var(--card-bg)',
+                    borderRadius: 12,
+                    padding: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, cursor: 'pointer' }}
+                    onClick={() => navigate(`/chat/${user.username}`)}
+                  >
+                    {user.avatar_url ? (
+                      <img src={user.avatar_url} alt="avatar" width={40} height={40} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          background: 'var(--placeholder-avatar-bg)',
+                          display: 'grid',
+                          placeItems: 'center',
+                          color: 'var(--placeholder-avatar-text)',
+                          fontWeight: 700
+                        }}
+                      >
+                        {(user.username || user.full_name || '?')[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {user.username || user.full_name}
+                        {hasUnread && (
+                          <span title="New messages" style={{ width: 8, height: 8, borderRadius: 4, background: 'var(--unread-dot-bg)', display: 'inline-block' }} />
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <button style={{ borderRadius: 8 }}>Open</button>
+
+                  {/* Delete button */}
+                  <button
+                    onClick={() => deleteChat(user.id)}
+                    title="Delete chat"
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'red',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      fontSize: 16,
+                      marginLeft: 8
+                    }}
+                  >
+                    ✕
+                  </button>
                 </li>
               )
             })}
