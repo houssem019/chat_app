@@ -225,7 +225,7 @@ export default function UserProfile() {
                   </button>
                 )}
                 {relationStatus === 'pending-out' && (
-                  <span className="btn-chip" style={{ background: 'var(--warning-chip-bg)', borderColor: 'var(--warning-chip-border)', color: 'var(--warning-chip-text)' }}>Request Sent</span>
+                    <span className="btn-chip" style={{ background: 'var(--warning-chip-bg)', border: '1px solid var(--warning-chip-border)', color: 'var(--warning-chip-text)', fontSize: '13px', padding: '2px 8px', borderRadius: '14px', display: 'inline-flex',margin: '4px 0', alignItems: 'center', justifyContent: 'center', fontWeight: 500 }}>Request Sent</span>
                 )}
                 {relationStatus === 'pending-in' && (
                   <>

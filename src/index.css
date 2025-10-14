@@ -323,3 +323,28 @@ button {
 button.login { background-color: #007bff; color: #fff; }
 button.signup { background-color: #28a745; color: #fff; }
 button.logout { background-color: #dc3545; color: #fff; }
+
+/* Back button */
+.back-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px; /* same as your other buttons */
+  color: var(--text-primary); /* default for light mode */
+}
+
+body.dark-mode .back-button {
+  color: #fff; /* dark mode color */
+}
+
+/* Adjust icon inside the button */
+.back-button .bi {
+  font-size: 1.5em;
+  line-height: 1;
+}
+
