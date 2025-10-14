@@ -177,6 +177,53 @@ body {
   border: 1px solid var(--card-border);
   border-radius: 12px;
 }
+
+/* Profile layout */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+/* Multi-field rows */
+.triple-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+/* Form elements */
+select,
+textarea {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+}
+
+/* Zoomable images */
+.click-zoom { cursor: zoom-in; }
+
+/* Lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 16px;
+}
+.lightbox__img {
+  max-width: 95vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
 .container-page {
   min-height: 100vh;
   background: var(--bg-page);
@@ -240,6 +287,7 @@ body {
   .mobile-menu-button { display: inline-flex; }
   .filters-grid { grid-template-columns: 1fr; }
   .profile-grid { grid-template-columns: 1fr; }
+  .triple-grid { grid-template-columns: 1fr; }
 }
 
 /* Center container */

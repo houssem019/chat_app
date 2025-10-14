@@ -11,6 +11,7 @@ export default function Profile() {
   const [gallery, setGallery] = useState([])
   const [isUploading, setIsUploading] = useState(false)
   const [myUserId, setMyUserId] = useState(null)
+  const [lightboxUrl, setLightboxUrl] = useState(null)
   const navigate = useNavigate()
 
   const ageOptions = useMemo(() => Array.from({ length: 83 }, (_, i) => i + 18), [])
@@ -56,14 +57,48 @@ export default function Profile() {
     setProfile(data || {})
   }
 
-  function onPickAvatar(file) {
+  function getExtFromMime(mime) {
+    if (!mime) return 'jpg'
+    if (mime.includes('jpeg')) return 'jpg'
+    if (mime.includes('png')) return 'png'
+    if (mime.includes('webp')) return 'webp'
+    return 'jpg'
+  }
+
+  async function compressImage(file, { maxDimension = 1280, quality = 0.75, mimeType } = {}) {
+    const type = mimeType || (file.type && file.type.startsWith('image/') ? (file.type.includes('png') ? 'image/png' : 'image/jpeg') : 'image/jpeg')
+    const imageBitmap = await createImageBitmap(file)
+    const { width, height } = imageBitmap
+    const scale = Math.min(1, maxDimension / Math.max(width, height))
+    const targetW = Math.max(1, Math.round(width * scale))
+    const targetH = Math.max(1, Math.round(height * scale))
+
+    const canvas = document.createElement('canvas')
+    canvas.width = targetW
+    canvas.height = targetH
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(imageBitmap, 0, 0, targetW, targetH)
+
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, type, quality))
+    const ext = getExtFromMime(blob?.type || type)
+    const compressedFile = new File([blob], `image.${ext}`, { type: blob?.type || type })
+    return compressedFile
+  }
+
+  async function onPickAvatar(file) {
     if (!file) {
       setAvatarFile(null)
       setPreviewUrl(null)
       return
     }
-    setAvatarFile(file)
-    setPreviewUrl(URL.createObjectURL(file))
+    try {
+      const compressed = await compressImage(file, { maxDimension: 640, quality: 0.75 })
+      setAvatarFile(compressed)
+      setPreviewUrl(URL.createObjectURL(compressed))
+    } catch (_) {
+      setAvatarFile(file)
+      setPreviewUrl(URL.createObjectURL(file))
+    }
   }
 
   async function loadGallery(userId) {
@@ -100,11 +135,15 @@ export default function Profile() {
     setIsUploading(true)
     try {
       for (const file of toUpload) {
-        const ext = file.name.split('.').pop()
+        let uploadFile = file
+        try {
+          uploadFile = await compressImage(file, { maxDimension: 1280, quality: 0.75 })
+        } catch (_) {}
+        const ext = getExtFromMime(uploadFile.type)
         const filePath = `profile-photos/${myUserId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
         const { error: uploadError } = await supabase.storage
           .from('chat-uploads')
-          .upload(filePath, file, { contentType: file.type })
+          .upload(filePath, uploadFile, { contentType: uploadFile.type })
         if (uploadError) throw uploadError
       }
       await loadGallery(myUserId)
@@ -134,7 +173,7 @@ export default function Profile() {
 
     try {
       if (avatarFile) {
-        const ext = avatarFile.name.split('.').pop()
+        const ext = getExtFromMime(avatarFile.type)
         const filePath = `avatars/${profile.id || 'new'}/${Date.now()}.${ext}`
         const { error: uploadError } = await supabase.storage
           .from('chat-uploads')
@@ -183,13 +222,14 @@ export default function Profile() {
           <h2 style={{ margin: 0 }}>My Profile</h2>
         </div>
 
-        <div className="card profile-grid" style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16, alignItems: 'center', padding: 16 }}>
+        <div className="card profile-grid" style={{ padding: 16 }}>
           {/* Avatar section */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             {previewUrl || profile.avatar_url ? (
               <img
                 src={previewUrl || profile.avatar_url}
                 alt="avatar"
+                className="click-zoom"
                 style={{
                   width: 100,
                   height: 100,
@@ -197,6 +237,7 @@ export default function Profile() {
                   borderRadius: '50%',
                   border: '2px solid var(--input-border)',
                 }}
+                onClick={() => setLightboxUrl(previewUrl || profile.avatar_url)}
               />
             ) : (
               <div
@@ -247,11 +288,11 @@ export default function Profile() {
               style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
             />
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            <div className="triple-grid">
               <select
                 value={profile.age || ''}
                 onChange={e => setProfile({ ...profile, age: Number(e.target.value) })}
-                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
+                style={{ padding: '10px 12px' }}
               >
                 <option value="">Select age</option>
                 {ageOptions.map(a => (
@@ -262,7 +303,7 @@ export default function Profile() {
               <select
                 value={profile.country || ''}
                 onChange={e => setProfile({ ...profile, country: e.target.value })}
-                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
+                style={{ padding: '10px 12px' }}
               >
                 <option value="">Select country</option>
                 {countries.map(c => (
@@ -273,7 +314,7 @@ export default function Profile() {
               <select
                 value={profile.gender || ''}
                 onChange={e => setProfile({ ...profile, gender: e.target.value })}
-                style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--input-border)', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
+                style={{ padding: '10px 12px' }}
               >
                 <option value="">Select gender</option>
                 {genderOptions.map(g => (
@@ -330,7 +371,7 @@ export default function Profile() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
               {gallery.map(item => (
                 <div key={item.path} style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--card-border)' }}>
-                  <img src={item.url} alt="profile" style={{ width: '100%', height: 120, objectFit: 'cover' }} />
+                  <img src={item.url} alt="profile" className="click-zoom" loading="lazy" style={{ width: '100%', height: 120, objectFit: 'cover' }} onClick={() => setLightboxUrl(item.url)} />
                   <button onClick={() => deletePhoto(item)} title="Remove" style={{ position: 'absolute', top: 6, right: 6, borderRadius: 8, border: 'none', background: '#111827cc', color: '#fff', cursor: 'pointer', padding: '4px 6px' }}>✕</button>
                 </div>
               ))}
@@ -345,6 +386,12 @@ export default function Profile() {
             {isSaving ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
+
+        {lightboxUrl && (
+          <div className="lightbox" onClick={() => setLightboxUrl(null)} role="dialog" aria-modal="true">
+            <img src={lightboxUrl} alt="enlarged" className="lightbox__img" />
+          </div>
+        )}
       </div>
     </div>
   )

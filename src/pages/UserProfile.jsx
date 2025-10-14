@@ -11,6 +11,7 @@ export default function UserProfile() {
   const [friendship, setFriendship] = useState(null)
   const [working, setWorking] = useState(false)
   const [gallery, setGallery] = useState([])
+  const [lightboxUrl, setLightboxUrl] = useState(null)
 
   const headerName = useMemo(
     () => userProfile?.username || userProfile?.full_name || 'User',
@@ -169,13 +170,15 @@ export default function UserProfile() {
         {!userProfile ? (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 24 }}>Loading…</div>
         ) : (
-          <div className="card profile-grid" style={{ padding: 16, display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16 }}>
+          <div className="card profile-grid" style={{ padding: 16 }}>
             <div>
               {userProfile.avatar_url ? (
                 <img
                   src={userProfile.avatar_url}
                   alt="avatar"
+                  className="click-zoom"
                   style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: '50%' }}
+                  onClick={() => setLightboxUrl(userProfile.avatar_url)}
                 />
               ) : (
                 <div
@@ -248,11 +251,16 @@ export default function UserProfile() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
                 {gallery.map(item => (
                   <div key={item.path} style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid var(--card-border)' }}>
-                    <img src={item.url} alt="profile" style={{ width: '100%', height: 120, objectFit: 'cover' }} />
+                    <img src={item.url} alt="profile" className="click-zoom" loading="lazy" style={{ width: '100%', height: 120, objectFit: 'cover' }} onClick={() => setLightboxUrl(item.url)} />
                   </div>
                 ))}
               </div>
             )}
+          </div>
+        )}
+        {lightboxUrl && (
+          <div className="lightbox" onClick={() => setLightboxUrl(null)} role="dialog" aria-modal="true">
+            <img src={lightboxUrl} alt="enlarged" className="lightbox__img" />
           </div>
         )}
       </div>
