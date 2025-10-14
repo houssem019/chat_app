@@ -35,8 +35,10 @@ export default function Auth() {
     <div style={{ minHeight: '100vh', background: 'var(--bg-page)', display: 'grid', placeItems: 'center', padding: 16 }}>
       <div style={{ width: '100%', maxWidth: 420, background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 12, padding: 24, boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
-          <span className="brand-title" style={{ fontSize: 22 }}>Chat</span>
-          <span className="brand-accent" style={{ fontSize: 22 }}>Twins</span>
+          <div style={{ display: 'inline-flex', gap: 0 }}>
+            <span className="brand-title" style={{ fontSize: 22 }}>Chat</span>
+            <span className="brand-accent" style={{ fontSize: 22 }}>Twins</span>
+          </div>
         </div>
         <h2 style={{ margin: '0 0 12px 0', textAlign: 'center' }}>{mode === 'login' ? 'Welcome back to ChatTwins' : 'Join ChatTwins'}</h2>
         <div style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: 16 }}>

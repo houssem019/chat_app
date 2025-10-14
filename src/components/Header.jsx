@@ -4,9 +4,16 @@ import { supabase } from '../supabaseClient'
 
 function Brand({ onClick }) {
   return (
-    <div onClick={onClick} className="row gap-8" style={{ alignItems: 'baseline', cursor: 'pointer', userSelect: 'none' }} title="Go to home">
-      <span className="brand-title">Chat</span>
-      <span className="brand-accent">Twins</span>
+    <div
+      onClick={onClick}
+      className="row gap-8"
+      style={{ alignItems: 'baseline', cursor: 'pointer', userSelect: 'none' }}
+      title="Go to home"
+    >
+     <div style={{ display: 'inline-flex', gap: 0 }}>
+       <span className="brand-title" style={{ fontSize: 22 }}>Chat</span>
+       <span className="brand-accent" style={{ fontSize: 22 }}>Twins</span>
+     </div>
     </div>
   )
 }
@@ -29,7 +36,7 @@ function Badge({ count }) {
         color: '#fff',
         fontSize: 11,
         fontWeight: 700,
-        lineHeight: '18px'
+        lineHeight: '18px',
       }}
     >
       {text}
@@ -67,10 +74,8 @@ export default function Header() {
       mounted = false
       cleanupRealtime()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Keep header UI in sync with authentication changes
   useEffect(() => {
     const { data: { subscription } = {} } = supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user || null
@@ -84,33 +89,17 @@ export default function Header() {
         setUnreadChats(0)
       }
     })
-    return () => {
-      try {
-        subscription?.unsubscribe?.()
-      } catch (_) {
-        // ignore
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => subscription?.unsubscribe?.()
   }, [])
 
-  // React to focus/localStorage/custom events to keep badges in real time
   useEffect(() => {
     if (!authUser?.id) return
     const myId = authUser.id
 
     const handleStorage = (event) => {
-      try {
-        const key = event?.key || ''
-        if (key.startsWith('lastOpenedChatById:')) {
-          computeUnreadChats(myId)
-        }
-        if (key === 'lastOpenedNotifications') {
-          fetchPendingRequests(myId)
-        }
-      } catch (_) {
-        // ignore
-      }
+      const key = event?.key || ''
+      if (key.startsWith('lastOpenedChatById:')) computeUnreadChats(myId)
+      if (key === 'lastOpenedNotifications') fetchPendingRequests(myId)
     }
 
     const handleChatsOpened = () => computeUnreadChats(myId)
@@ -128,15 +117,10 @@ export default function Header() {
       window.removeEventListener('notifications:lastOpened', handleNotificationsOpened)
       window.removeEventListener('focus', handleFocus)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser?.id])
 
   useEffect(() => {
-    if (authUser) {
-      // Recompute counts on route changes in case user opened chats/notifications
-      refreshCounts(authUser.id)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (authUser) refreshCounts(authUser.id)
   }, [location.pathname])
 
   async function refreshCounts(myId) {
@@ -160,12 +144,10 @@ export default function Header() {
       const lastIso = localStorage.getItem('lastOpenedNotifications')
       const lastOpened = lastIso ? Date.parse(lastIso) : 0
       if (lastOpened > 0) {
-        const newer = list.filter(it => it?.created_at && Date.parse(it.created_at) > lastOpened)
+        const newer = list.filter((it) => it?.created_at && Date.parse(it.created_at) > lastOpened)
         unseen = newer.length
       }
-    } catch (_) {
-      // ignore storage errors
-    }
+    } catch (_) {}
     setPendingRequests(unseen)
   }
 
@@ -204,22 +186,18 @@ export default function Header() {
     cleanupRealtime()
     const msgCh = supabase
       .channel('realtime:header:messages')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
         const m = payload.new
-        if (m.receiver_id === myId) {
-          computeUnreadChats(myId)
-        }
+        if (m.receiver_id === myId) computeUnreadChats(myId)
       })
       .subscribe()
     messageChannelRef.current = msgCh
 
     const frCh = supabase
       .channel('realtime:header:friendships')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, payload => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, (payload) => {
         const f = payload.new || payload.old
-        if (f.friend_id === myId || f.requester_id === myId) {
-          fetchPendingRequests(myId)
-        }
+        if (f.friend_id === myId || f.requester_id === myId) fetchPendingRequests(myId)
       })
       .subscribe()
     friendshipChannelRef.current = frCh
@@ -245,29 +223,43 @@ export default function Header() {
   }
 
   const isAuthed = useMemo(() => Boolean(authUser), [authUser])
+  const isAuthPage = location.pathname === '/auth'
 
   return (
-    <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--header-bg)', borderBottom: '1px solid var(--header-border)', padding: '10px 16px' }}>
+    <div
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        background: 'var(--header-bg)',
+        borderBottom: '1px solid var(--header-border)',
+        padding: '10px 16px',
+      }}
+    >
       <div className="header-inner">
         <Brand onClick={() => navigate('/')} />
         <div className="row gap-8 header-buttons" style={{ alignItems: 'center' }}>
           {isAuthed ? (
             <>
-              <button className="btn" onClick={() => navigate('/')}>All Users</button>
+              <button className="btn" onClick={() => navigate('/')}>
+                All Users
+              </button>
               <button className="btn" onClick={() => navigate('/chats')}>
-                My Chats
-                <Badge count={unreadChats} />
+                My Chats <Badge count={unreadChats} />
               </button>
               <button className="btn" onClick={() => navigate('/friends')}>Friends</button>
               <button className="btn" onClick={() => navigate('/notifications')}>
-                Notifications
-                <Badge count={pendingRequests} />
+                Notifications <Badge count={pendingRequests} />
               </button>
               <button className="btn" onClick={() => navigate('/profile')}>Profile</button>
               <button className="btn btn-danger" onClick={handleLogout}>Logout</button>
             </>
           ) : (
-            <button className="btn btn-primary" onClick={() => navigate('/auth')}>Login</button>
+            !isAuthPage && (
+              <button className="btn btn-primary" onClick={() => navigate('/auth')}>
+                Login
+              </button>
+            )
           )}
         </div>
       </div>

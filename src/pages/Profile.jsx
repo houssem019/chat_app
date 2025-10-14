@@ -234,20 +234,53 @@ export default function Profile() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-          <button className="btn btn-primary" onClick={updateProfile} disabled={isSaving}>
-            {isSaving ? 'Saving…' : 'Save Changes'}
-          </button>
-        </div>
-
         <div className="card" style={{ marginTop: 20, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <h3 style={{ margin: 0 }}>My Photos</h3>
             <div>
-              <label htmlFor="gallery-input" style={{ display: 'inline-block', padding: '6px 10px', borderRadius: 8, border: '1px dashed #cbd5e1', cursor: gallery.length >= 5 || isUploading ? 'not-allowed' : 'pointer', background: '#f8fafc', opacity: gallery.length >= 5 ? 0.6 : 1 }}>
-                {isUploading ? 'Uploading…' : (gallery.length >= 5 ? 'Limit Reached' : 'Add Photos')}
+              <label
+                htmlFor="gallery-input"
+                style={{
+                  display: "inline-block",
+                  padding: "10px 18px",
+                  borderRadius: "10px",
+                  border: "2px dashed #6b7280",
+                  cursor:
+                    gallery.length >= 5 || isUploading ? "not-allowed" : "pointer",
+                  backgroundColor: "#2d3748", // consistent dark grey background
+                  color: "#f8fafc", // white text
+                  fontWeight: 600,
+                  fontSize: "0.95rem",
+                  transition: "all 0.25s ease",
+                  opacity: gallery.length >= 5 ? 0.6 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isUploading && gallery.length < 5) {
+                    e.target.style.backgroundColor = "#4a5568"; // slightly lighter on hover
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "#2d3748"; // restore
+                }}
+              >
+                {isUploading
+                  ? "Uploading…"
+                  : gallery.length >= 5
+                  ? "Limit Reached"
+                  : "Add Photos"}
               </label>
-              <input id="gallery-input" type="file" accept="image/*" multiple disabled={gallery.length >= 5 || isUploading} style={{ display: 'none' }} onChange={e => { uploadPhotos(e.target.files); e.target.value = '' }} />
+              <input
+                id="gallery-input"
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={gallery.length >= 5 || isUploading}
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  uploadPhotos(e.target.files);
+                  e.target.value = "";
+                }}
+              />
             </div>
           </div>
           {gallery.length === 0 ? (
@@ -263,6 +296,12 @@ export default function Profile() {
             </div>
           )}
           <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: 12 }}>You can upload up to 5 photos.</div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+                  <button className="btn btn-primary" onClick={updateProfile} disabled={isSaving}>
+                    {isSaving ? 'Saving…' : 'Save Changes'}
+                  </button>
         </div>
       </div>
     </div>
