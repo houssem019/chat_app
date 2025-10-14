@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useNavigate } from 'react-router-dom'
 import { countries } from '../countries'
@@ -15,6 +15,10 @@ export default function UsersList() {
   const [sendingId, setSendingId] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
+  const profilesChannelRef = useRef(null)
+  const statusChannelRef = useRef(null)
+
+  const ONLINE_WINDOW_MS = 5 * 60 * 1000 // 5 minutes
 
   useEffect(() => {
     (async () => {
@@ -22,6 +26,7 @@ export default function UsersList() {
       if (!user) return navigate('/auth')
       setCurrentUser(user)
       await Promise.all([fetchUsers(), fetchFriendships(user.id)])
+      subscribeProfilesRealtime(user.id)
       setIsLoading(false)
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -33,8 +38,23 @@ export default function UsersList() {
     const list = data || []
     const myId = currentUser?.id
     const withoutMe = myId ? list.filter(u => u.id !== myId) : list
-    setUsers(withoutMe)
-    setFilteredUsers(withoutMe)
+
+    // Join with user_status in one extra query
+    const ids = withoutMe.map(u => u.id)
+    let statusById = new Map()
+    if (ids.length > 0) {
+      const { data: statuses } = await supabase.from('user_status').select('user_id,is_online,last_seen_at').in('user_id', ids)
+      statusById = new Map((statuses || []).map(s => [s.user_id, s]))
+    }
+
+    const merged = withoutMe.map(u => ({
+      ...u,
+      _status: statusById.get(u.id) || null
+    }))
+
+    const sorted = sortUsersOnlineFirst(merged)
+    setUsers(sorted)
+    setFilteredUsers(sorted)
   }
 
   async function fetchFriendships(userId) {
@@ -55,8 +75,92 @@ export default function UsersList() {
     if (filterAgeTo) temp = temp.filter(u => Number(u.age) <= Number(filterAgeTo))
     if (filterGender) temp = temp.filter(u => (u.gender || '').toLowerCase() === filterGender.toLowerCase())
     if (currentUser?.id) temp = temp.filter(u => u.id !== currentUser.id)
-    setFilteredUsers(temp)
+    setFilteredUsers(sortUsersOnlineFirst(temp))
   }
+
+  function isUserOnline(user) {
+    const status = user?._status || {}
+    const last = status?.last_seen_at ? Date.parse(status.last_seen_at) : 0
+    const withinWindow = last > 0 && Date.now() - last <= ONLINE_WINDOW_MS
+    if (typeof status?.is_online !== 'boolean') return withinWindow
+    return Boolean(status.is_online) && withinWindow
+  }
+
+  function sortUsersOnlineFirst(list) {
+    return [...list].sort((a, b) => {
+      const ao = isUserOnline(a) ? 1 : 0
+      const bo = isUserOnline(b) ? 1 : 0
+      if (bo !== ao) return bo - ao
+      const an = (a.username || a.full_name || '').toLowerCase()
+      const bn = (b.username || b.full_name || '').toLowerCase()
+      return an.localeCompare(bn)
+    })
+  }
+
+  function subscribeProfilesRealtime(myId) {
+    if (profilesChannelRef.current) {
+      supabase.removeChannel(profilesChannelRef.current)
+      profilesChannelRef.current = null
+    }
+    const ch = supabase
+      .channel('realtime:userslist:profiles')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+        const row = payload.new || payload.old
+        if (!row || row.id === myId) return
+        setUsers(prev => {
+          const exists = prev.some(u => u.id === row.id)
+          let next
+          if (payload.eventType === 'DELETE') {
+            next = prev.filter(u => u.id !== row.id)
+          } else if (exists) {
+            next = prev.map(u => (u.id === row.id ? { ...u, ...payload.new } : u))
+          } else {
+            next = [...prev, payload.new]
+          }
+          return sortUsersOnlineFirst(next)
+        })
+        // Re-apply current filters to keep UI consistent
+        setFilteredUsers(prev => sortUsersOnlineFirst(
+          prev
+            .filter(u => u.id !== myId) // ensure self excluded
+            .map(u => (u.id === row.id && payload.new ? { ...u, ...payload.new } : u))
+        ))
+      })
+      .subscribe()
+    profilesChannelRef.current = ch
+
+    // Subscribe to user_status for live presence updates
+    if (statusChannelRef.current) {
+      supabase.removeChannel(statusChannelRef.current)
+      statusChannelRef.current = null
+    }
+    const st = supabase
+      .channel('realtime:userslist:user_status')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_status' }, (payload) => {
+        const s = payload.new || payload.old
+        if (!s || s.user_id === myId) return
+        setUsers(prev => {
+          const next = prev.map(u => (u.id === s.user_id ? { ...u, _status: { ...u._status, ...payload.new } } : u))
+          return sortUsersOnlineFirst(next)
+        })
+        setFilteredUsers(prev => sortUsersOnlineFirst(prev.map(u => (u.id === s.user_id ? { ...u, _status: { ...u._status, ...payload.new } } : u))))
+      })
+      .subscribe()
+    statusChannelRef.current = st
+  }
+
+  useEffect(() => {
+    return () => {
+      if (profilesChannelRef.current) {
+        supabase.removeChannel(profilesChannelRef.current)
+        profilesChannelRef.current = null
+      }
+      if (statusChannelRef.current) {
+        supabase.removeChannel(statusChannelRef.current)
+        statusChannelRef.current = null
+      }
+    }
+  }, [])
 
   function relationWith(userId) {
     if (!currentUser || !friendships) return null
@@ -141,15 +245,21 @@ export default function UsersList() {
               const rel = relationWith(u.id)
               const isSelf = currentUser?.id === u.id
               if (isSelf) return null
+              const online = isUserOnline(u)
               return (
                 <li key={u.id} className="card" style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {u.avatar_url ? (
-                    <img src={u.avatar_url} alt="avatar" width={48} height={48} style={{ borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--placeholder-avatar-bg)', display: 'grid', placeItems: 'center', color: 'var(--placeholder-avatar-text)', fontWeight: 700 }}>
-                      {(u.username || u.full_name || '?')[0]?.toUpperCase()}
-                    </div>
-                  )}
+                  <div style={{ position: 'relative', width: 48, height: 48 }}>
+                    {u.avatar_url ? (
+                      <img src={u.avatar_url} alt="avatar" width={48} height={48} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--placeholder-avatar-bg)', display: 'grid', placeItems: 'center', color: 'var(--placeholder-avatar-text)', fontWeight: 700 }}>
+                        {(u.username || u.full_name || '?')[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    {online && (
+                      <span title="Online" aria-label="Online" style={{ position: 'absolute', top: -2, left: -2, width: 12, height: 12, borderRadius: 6, background: '#22c55e', border: '2px solid var(--card-bg)', display: 'inline-block' }} />
+                    )}
+                  </div>
                   <div style={{ flex: 1 }}>
                     <div onClick={(e) => { e.stopPropagation(); u.username && navigate(`/u/${u.username}`) }} style={{ cursor: u.username ? 'pointer' : 'default', fontWeight: 600 }}>
                       {u.username || u.full_name || 'No Name'}

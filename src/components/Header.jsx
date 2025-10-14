@@ -54,6 +54,8 @@ export default function Header() {
 
   const messageChannelRef = useRef(null)
   const friendshipChannelRef = useRef(null)
+  const presenceIntervalRef = useRef(null)
+  const presenceWarnedRef = useRef(false)
 
   useEffect(() => {
     let mounted = true
@@ -64,15 +66,18 @@ export default function Header() {
       if (user) {
         refreshCounts(user.id)
         subscribeRealtime(user.id)
+        startPresence(user.id)
       } else {
         cleanupRealtime()
         setPendingRequests(0)
         setUnreadChats(0)
+        stopPresence()
       }
     })
     return () => {
       mounted = false
       cleanupRealtime()
+      stopPresence()
     }
   }, [])
 
@@ -83,10 +88,12 @@ export default function Header() {
       if (user) {
         refreshCounts(user.id)
         subscribeRealtime(user.id)
+        startPresence(user.id)
       } else {
         cleanupRealtime()
         setPendingRequests(0)
         setUnreadChats(0)
+        stopPresence()
       }
     })
     return () => subscription?.unsubscribe?.()
@@ -214,7 +221,71 @@ export default function Header() {
     }
   }
 
+  // Presence management: update last_seen_at and is_online regularly while the app is open.
+  function stopPresence() {
+    if (presenceIntervalRef.current) {
+      clearInterval(presenceIntervalRef.current)
+      presenceIntervalRef.current = null
+    }
+    try {
+      window.removeEventListener('visibilitychange', onVisibilityHeartbeat)
+      window.removeEventListener('focus', onFocusHeartbeat)
+      window.removeEventListener('beforeunload', onBeforeUnloadHeartbeat)
+    } catch (_) {}
+  }
+
+  function startPresence(userId) {
+    stopPresence()
+    // Heartbeat immediately and then every 60s
+    heartbeat(userId)
+    presenceIntervalRef.current = setInterval(() => heartbeat(userId), 60_000)
+    try {
+      window.addEventListener('visibilitychange', onVisibilityHeartbeat)
+      window.addEventListener('focus', onFocusHeartbeat)
+      window.addEventListener('beforeunload', onBeforeUnloadHeartbeat)
+    } catch (_) {}
+  }
+
+  function onVisibilityHeartbeat() {
+    if (document.visibilityState === 'visible' && authUser?.id) heartbeat(authUser.id)
+  }
+
+  function onFocusHeartbeat() {
+    if (authUser?.id) heartbeat(authUser.id)
+  }
+
+  async function heartbeat(userId) {
+    try {
+      await supabase
+        .from('user_status')
+        .upsert([
+          { user_id: userId, last_seen_at: new Date().toISOString(), is_online: true }
+        ], { onConflict: 'user_id' })
+    } catch (e) {
+      if (!presenceWarnedRef.current) {
+        console.warn('presence heartbeat failed (ensure DB columns exist):', e)
+        presenceWarnedRef.current = true
+      }
+    }
+  }
+
+  async function setOfflineNow(userId) {
+    try {
+      await supabase
+        .from('user_status')
+        .upsert([
+          { user_id: userId, is_online: false, last_seen_at: new Date().toISOString() }
+        ], { onConflict: 'user_id' })
+    } catch (_) {}
+  }
+
+  function onBeforeUnloadHeartbeat() {
+    // Best-effort heartbeat so user appears online for the next 5 minutes window.
+    if (authUser?.id) void heartbeat(authUser.id)
+  }
+
   async function handleLogout() {
+    if (authUser?.id) await setOfflineNow(authUser.id)
     await supabase.auth.signOut()
     setAuthUser(null)
     setPendingRequests(0)
