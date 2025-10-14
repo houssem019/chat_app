@@ -16,6 +16,7 @@ export default function UsersList() {
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
   const profilesChannelRef = useRef(null)
+  const statusChannelRef = useRef(null)
 
   const ONLINE_WINDOW_MS = 5 * 60 * 1000 // 5 minutes
 
@@ -37,7 +38,21 @@ export default function UsersList() {
     const list = data || []
     const myId = currentUser?.id
     const withoutMe = myId ? list.filter(u => u.id !== myId) : list
-    const sorted = sortUsersOnlineFirst(withoutMe)
+
+    // Join with user_status in one extra query
+    const ids = withoutMe.map(u => u.id)
+    let statusById = new Map()
+    if (ids.length > 0) {
+      const { data: statuses } = await supabase.from('user_status').select('user_id,is_online,last_seen_at').in('user_id', ids)
+      statusById = new Map((statuses || []).map(s => [s.user_id, s]))
+    }
+
+    const merged = withoutMe.map(u => ({
+      ...u,
+      _status: statusById.get(u.id) || null
+    }))
+
+    const sorted = sortUsersOnlineFirst(merged)
     setUsers(sorted)
     setFilteredUsers(sorted)
   }
@@ -64,11 +79,11 @@ export default function UsersList() {
   }
 
   function isUserOnline(user) {
-    const last = user?.last_seen_at ? Date.parse(user.last_seen_at) : 0
+    const status = user?._status || {}
+    const last = status?.last_seen_at ? Date.parse(status.last_seen_at) : 0
     const withinWindow = last > 0 && Date.now() - last <= ONLINE_WINDOW_MS
-    // If is_online is missing, fall back to time window only
-    if (typeof user?.is_online !== 'boolean') return withinWindow
-    return Boolean(user.is_online) && withinWindow
+    if (typeof status?.is_online !== 'boolean') return withinWindow
+    return Boolean(status.is_online) && withinWindow
   }
 
   function sortUsersOnlineFirst(list) {
@@ -113,6 +128,25 @@ export default function UsersList() {
       })
       .subscribe()
     profilesChannelRef.current = ch
+
+    // Subscribe to user_status for live presence updates
+    if (statusChannelRef.current) {
+      supabase.removeChannel(statusChannelRef.current)
+      statusChannelRef.current = null
+    }
+    const st = supabase
+      .channel('realtime:userslist:user_status')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_status' }, (payload) => {
+        const s = payload.new || payload.old
+        if (!s || s.user_id === myId) return
+        setUsers(prev => {
+          const next = prev.map(u => (u.id === s.user_id ? { ...u, _status: { ...u._status, ...payload.new } } : u))
+          return sortUsersOnlineFirst(next)
+        })
+        setFilteredUsers(prev => sortUsersOnlineFirst(prev.map(u => (u.id === s.user_id ? { ...u, _status: { ...u._status, ...payload.new } } : u))))
+      })
+      .subscribe()
+    statusChannelRef.current = st
   }
 
   useEffect(() => {
@@ -120,6 +154,10 @@ export default function UsersList() {
       if (profilesChannelRef.current) {
         supabase.removeChannel(profilesChannelRef.current)
         profilesChannelRef.current = null
+      }
+      if (statusChannelRef.current) {
+        supabase.removeChannel(statusChannelRef.current)
+        statusChannelRef.current = null
       }
     }
   }, [])
