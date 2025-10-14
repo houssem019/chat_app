@@ -257,10 +257,12 @@ export default function Header() {
   async function heartbeat(userId) {
     try {
       await supabase
-        .from('user_status')
-        .upsert([
-          { user_id: userId, last_seen_at: new Date().toISOString(), is_online: true }
-        ], { onConflict: 'user_id' })
+        .from('profiles')
+        .update({
+          last_seen_at: new Date().toISOString(),
+          is_online: true,
+        })
+        .eq('id', userId)
     } catch (e) {
       if (!presenceWarnedRef.current) {
         console.warn('presence heartbeat failed (ensure DB columns exist):', e)
@@ -272,10 +274,12 @@ export default function Header() {
   async function setOfflineNow(userId) {
     try {
       await supabase
-        .from('user_status')
-        .upsert([
-          { user_id: userId, is_online: false, last_seen_at: new Date().toISOString() }
-        ], { onConflict: 'user_id' })
+        .from('profiles')
+        .update({
+          is_online: false,
+          last_seen_at: new Date().toISOString(),
+        })
+        .eq('id', userId)
     } catch (_) {}
   }
 
