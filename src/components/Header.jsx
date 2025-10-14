@@ -51,6 +51,7 @@ export default function Header() {
   const [authUser, setAuthUser] = useState(null)
   const [pendingRequests, setPendingRequests] = useState(0)
   const [unreadChats, setUnreadChats] = useState(0)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const messageChannelRef = useRef(null)
   const friendshipChannelRef = useRef(null)
@@ -128,7 +129,30 @@ export default function Header() {
 
   useEffect(() => {
     if (authUser) refreshCounts(authUser.id)
+    // Close mobile menu when navigating to a new route
+    setIsMobileMenuOpen(false)
   }, [location.pathname])
+
+  // Close on Escape key when the mobile menu is open
+  useEffect(() => {
+    if (!isMobileMenuOpen) return
+    function onKeyDown(e) {
+      if (e.key === 'Escape') setIsMobileMenuOpen(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [isMobileMenuOpen])
+
+  // Disable body scroll while the drawer is open
+  useEffect(() => {
+    const { style } = document.body
+    const prev = style.overflow
+    if (isMobileMenuOpen) style.overflow = 'hidden'
+    else style.overflow = prev || ''
+    return () => {
+      style.overflow = prev || ''
+    }
+  }, [isMobileMenuOpen])
 
   async function refreshCounts(myId) {
     await Promise.all([fetchPendingRequests(myId), computeUnreadChats(myId)])
@@ -289,6 +313,7 @@ export default function Header() {
   }
 
   async function handleLogout() {
+    setIsMobileMenuOpen(false)
     if (authUser?.id) await setOfflineNow(authUser.id)
     await supabase.auth.signOut()
     setAuthUser(null)
@@ -299,6 +324,39 @@ export default function Header() {
 
   const isAuthed = useMemo(() => Boolean(authUser), [authUser])
   const isAuthPage = location.pathname === '/auth'
+
+  function handleNavigate(path) {
+    setIsMobileMenuOpen(false)
+    navigate(path)
+  }
+
+  function renderMenuButtons({ vertical = false } = {}) {
+    const containerClass = vertical ? 'col gap-8' : 'row gap-8'
+    return (
+      <div className={containerClass} style={{ alignItems: vertical ? 'stretch' : 'center' }}>
+        {isAuthed ? (
+          <>
+            <button className="btn" onClick={() => handleNavigate('/')}>All Users</button>
+            <button className="btn" onClick={() => handleNavigate('/chats')}>
+              My Chats <Badge count={unreadChats} />
+            </button>
+            <button className="btn" onClick={() => handleNavigate('/friends')}>Friends</button>
+            <button className="btn" onClick={() => handleNavigate('/notifications')}>
+              Notifications <Badge count={pendingRequests} />
+            </button>
+            <button className="btn" onClick={() => handleNavigate('/profile')}>Profile</button>
+            <button className="btn btn-danger" onClick={handleLogout}>Logout</button>
+          </>
+        ) : (
+          !isAuthPage && (
+            <button className="btn btn-primary" onClick={() => handleNavigate('/auth')}>
+              Login
+            </button>
+          )
+        )}
+      </div>
+    )
+  }
 
   return (
     <div
@@ -313,30 +371,39 @@ export default function Header() {
     >
       <div className="header-inner">
         <Brand onClick={() => navigate('/')} />
-        <div className="row gap-8 header-buttons" style={{ alignItems: 'center' }}>
-          {isAuthed ? (
-            <>
-              <button className="btn" onClick={() => navigate('/')}>
-                All Users
-              </button>
-              <button className="btn" onClick={() => navigate('/chats')}>
-                My Chats <Badge count={unreadChats} />
-              </button>
-              <button className="btn" onClick={() => navigate('/friends')}>Friends</button>
-              <button className="btn" onClick={() => navigate('/notifications')}>
-                Notifications <Badge count={pendingRequests} />
-              </button>
-              <button className="btn" onClick={() => navigate('/profile')}>Profile</button>
-              <button className="btn btn-danger" onClick={handleLogout}>Logout</button>
-            </>
-          ) : (
-            !isAuthPage && (
-              <button className="btn btn-primary" onClick={() => navigate('/auth')}>
-                Login
-              </button>
-            )
-          )}
+        <div className="header-buttons" style={{ alignItems: 'center' }}>{renderMenuButtons()}</div>
+        <button
+          className="btn btn-icon mobile-menu-button"
+          aria-label="Open menu"
+          aria-expanded={isMobileMenuOpen}
+          onClick={() => setIsMobileMenuOpen((v) => !v)}
+          title="Open menu"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+      {/* Mobile overlay and drawer */}
+      <div
+        className={`mobile-overlay${isMobileMenuOpen ? ' open' : ''}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      />
+      <div className={`mobile-drawer${isMobileMenuOpen ? ' open' : ''}`} role="dialog" aria-modal="true">
+        <div className="row center-between" style={{ alignItems: 'center', marginBottom: 12 }}>
+          <Brand onClick={() => handleNavigate('/')} />
+          <button
+            className="btn btn-icon"
+            aria-label="Close menu"
+            onClick={() => setIsMobileMenuOpen(false)}
+            title="Close menu"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
+        <div className="mobile-menu-vertical">{renderMenuButtons({ vertical: true })}</div>
       </div>
     </div>
   )
