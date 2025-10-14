@@ -16,6 +16,27 @@ export default function Profile() {
   const ageOptions = useMemo(() => Array.from({ length: 83 }, (_, i) => i + 18), [])
   const genderOptions = ['male', 'female', 'other']
 
+  const fileButtonStyle = {
+    display: 'inline-block',
+    padding: '10px 16px',
+    borderRadius: 10,
+    border: '2px solid var(--input-border)',
+    backgroundColor: 'var(--muted-surface-bg)',
+    color: 'var(--text-primary)',
+    fontWeight: 600,
+    fontSize: '0.95rem',
+    textAlign: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  }
+
+  const handleHover = (e) => {
+    e.target.style.backgroundColor = 'var(--input-bg)'
+  }
+  const handleLeave = (e) => {
+    e.target.style.backgroundColor = 'var(--muted-surface-bg)'
+  }
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return navigate('/auth')
@@ -155,8 +176,6 @@ export default function Profile() {
     }
   }
 
-  
-
   return (
     <div className="container-page">
       <div style={{ maxWidth: 720, margin: '0 auto', padding: 16 }}>
@@ -165,16 +184,55 @@ export default function Profile() {
         </div>
 
         <div className="card profile-grid" style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 16, alignItems: 'center', padding: 16 }}>
-          <div>
+          {/* Avatar section */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             {previewUrl || profile.avatar_url ? (
-              <img src={previewUrl || profile.avatar_url} alt="avatar" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: '50%' }} />
+              <img
+                src={previewUrl || profile.avatar_url}
+                alt="avatar"
+                style={{
+                  width: 100,
+                  height: 100,
+                  objectFit: 'cover',
+                  borderRadius: '50%',
+                  border: '2px solid var(--input-border)',
+                }}
+              />
             ) : (
-              <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'var(--input-border)', display: 'grid', placeItems: 'center', color: 'var(--text-secondary)' }}>No avatar</div>
+              <div
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: '50%',
+                  background: 'var(--input-border)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: 'var(--text-secondary)',
+                  fontWeight: 500,
+                }}
+              >
+                No Avatar
+              </div>
             )}
-            <label htmlFor="avatar-input" style={{ display: 'inline-block', marginTop: 8, padding: '6px 10px', borderRadius: 8, border: '1px dashed var(--input-border)', cursor: 'pointer', background: 'var(--muted-surface-bg)' }}>Change</label>
-            <input id="avatar-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => onPickAvatar(e.target.files?.[0])} />
+
+            <label
+              htmlFor="avatar-input"
+              style={fileButtonStyle}
+              onMouseEnter={handleHover}
+              onMouseLeave={handleLeave}
+            >
+              Change
+            </label>
+            <input
+              id="avatar-input"
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={(e) => onPickAvatar(e.target.files?.[0])}
+            />
           </div>
 
+          {/* Profile info */}
           <div style={{ display: 'grid', gap: 10 }}>
             <input
               placeholder="Username"
@@ -234,6 +292,7 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Gallery section */}
         <div className="card" style={{ marginTop: 20, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <h3 style={{ margin: 0 }}>My Photos</h3>
@@ -241,33 +300,14 @@ export default function Profile() {
               <label
                 htmlFor="gallery-input"
                 style={{
-                  display: "inline-block",
-                  padding: "10px 18px",
-                  borderRadius: "10px",
-                  border: "2px dashed #6b7280",
-                  cursor:
-                    gallery.length >= 5 || isUploading ? "not-allowed" : "pointer",
-                  backgroundColor: "#2d3748", // consistent dark grey background
-                  color: "#f8fafc", // white text
-                  fontWeight: 600,
-                  fontSize: "0.95rem",
-                  transition: "all 0.25s ease",
+                  ...fileButtonStyle,
+                  cursor: gallery.length >= 5 || isUploading ? 'not-allowed' : 'pointer',
                   opacity: gallery.length >= 5 ? 0.6 : 1,
                 }}
-                onMouseEnter={(e) => {
-                  if (!isUploading && gallery.length < 5) {
-                    e.target.style.backgroundColor = "#4a5568"; // slightly lighter on hover
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "#2d3748"; // restore
-                }}
+                onMouseEnter={handleHover}
+                onMouseLeave={handleLeave}
               >
-                {isUploading
-                  ? "Uploading…"
-                  : gallery.length >= 5
-                  ? "Limit Reached"
-                  : "Add Photos"}
+                {isUploading ? "Uploading…" : gallery.length >= 5 ? "Limit Reached" : "Add Photos"}
               </label>
               <input
                 id="gallery-input"
@@ -275,14 +315,15 @@ export default function Profile() {
                 accept="image/*"
                 multiple
                 disabled={gallery.length >= 5 || isUploading}
-                style={{ display: "none" }}
+                style={{ display: 'none' }}
                 onChange={(e) => {
-                  uploadPhotos(e.target.files);
-                  e.target.value = "";
+                  uploadPhotos(e.target.files)
+                  e.target.value = ''
                 }}
               />
             </div>
           </div>
+
           {gallery.length === 0 ? (
             <div style={{ color: 'var(--text-muted)' }}>No photos yet.</div>
           ) : (
@@ -298,10 +339,11 @@ export default function Profile() {
           <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: 12 }}>You can upload up to 5 photos.</div>
         </div>
 
+        {/* Save button */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                  <button className="btn btn-primary" onClick={updateProfile} disabled={isSaving}>
-                    {isSaving ? 'Saving…' : 'Save Changes'}
-                  </button>
+          <button className="btn btn-primary" onClick={updateProfile} disabled={isSaving}>
+            {isSaving ? 'Saving…' : 'Save Changes'}
+          </button>
         </div>
       </div>
     </div>
