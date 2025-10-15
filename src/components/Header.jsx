@@ -52,6 +52,7 @@ export default function Header() {
   const [pendingRequests, setPendingRequests] = useState(0)
   const [unreadChats, setUnreadChats] = useState(0)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
 
   const messageChannelRef = useRef(null)
   const friendshipChannelRef = useRef(null)
@@ -142,6 +143,30 @@ export default function Header() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isMobileMenuOpen])
+
+  // Theme initialization from localStorage or system preference
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('theme')
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', saved)
+        setIsDarkMode(saved === 'dark')
+      } else {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        setIsDarkMode(Boolean(prefersDark))
+      }
+    } catch (_) {}
+  }, [])
+
+  function toggleTheme() {
+    const nextIsDark = !isDarkMode
+    setIsDarkMode(nextIsDark)
+    const next = nextIsDark ? 'dark' : 'light'
+    try {
+      document.documentElement.setAttribute('data-theme', next)
+      localStorage.setItem('theme', next)
+    } catch (_) {}
+  }
 
   // Disable body scroll while the drawer is open
   useEffect(() => {
@@ -346,6 +371,35 @@ export default function Header() {
             </button>
             <button className="btn" onClick={() => handleNavigate('/profile')}>Profile</button>
             <button className="btn btn-danger" onClick={handleLogout}>Logout</button>
+            {/* Theme toggle (modern switch) */}
+            <div
+              className={`theme-toggle${isDarkMode ? ' is-dark' : ''}`}
+              role="switch"
+              aria-checked={isDarkMode}
+              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              onClick={toggleTheme}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  toggleTheme()
+                }
+              }}
+              tabIndex={0}
+              title={isDarkMode ? 'Dark mode: on' : 'Dark mode: off'}
+            >
+              <span className="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
+                  <path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M7.5 17.5L6 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </span>
+              <span className="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2" fill="none" />
+                </svg>
+              </span>
+              <span className="theme-toggle__thumb" />
+            </div>
           </>
         ) : (
           !isAuthPage && (
